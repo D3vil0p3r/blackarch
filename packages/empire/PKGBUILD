@@ -40,7 +40,7 @@ depends=('python' 'python-urllib3' 'python-requests' 'python-iptools' 'tk'
          'python-websockets' 'python-werkzeug' 'python-zipp' 'websockify'
          'python-zope-interface' 'mariadb' 'uvicorn')
 makedepends=('git')
-install='empire.install'
+install="empire.install"
 source=("$pkgname::git+https://github.com/BC-SECURITY/Empire.git"
         'https://files.pythonhosted.org/packages/35/d3/d6a9610f19d943e198df502ae660c6b5acf84cc3bc421a2aa3c0fb6b21d1/pyOpenSSL-22.0.0.tar.gz'
         'setup_database.py.patch')
