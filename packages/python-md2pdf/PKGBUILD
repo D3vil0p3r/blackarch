@@ -19,7 +19,6 @@ prepare() {
   cd "$_pkgname-$pkgver"
 
   sed -i 's/find_packages()/find_packages(exclude=["tests*"])/g' setup.py
-  cat setup.py
 }
 
 build() {
