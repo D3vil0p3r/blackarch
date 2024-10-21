@@ -17,7 +17,7 @@ sha512sums=('6e86dabb235f35e572b08cf5fcec02b9e2afce70f63ce40e53b4222782a6245df00
 
 prepare() {
   cd "$_pkgname-$pkgver"
-  
+
   sed -i 's/find_packages()/find_packages(exclude=["tests*"])/g' setup.py
   cat setup.py
 }
