@@ -63,9 +63,7 @@ prepare() {
   cd $pkgname
 
   # Prevent invoking git submodule update on install directory since no git dir
-  sed -i "s/auto_update: true/auto_update: false/g" ./empire/server/config.yaml
-  # Prevent invoking git clone on install directory due to permission denied
-  sed -i '/starkiller:/,/enabled:/s/enabled: true/enabled: false/' ./empire/server/config.yaml
+  sed -i "/submodules:/,/auto_update:/s/auto_update: true/auto_update: false/" ./empire/server/config.yaml
 
   # need by empire
   cp -r "$srcdir/pyOpenSSL-22.0.0/src/OpenSSL" OpenSSL
