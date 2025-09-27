@@ -3,27 +3,41 @@
 
 pkgname=python-lnkparse3
 _pkgname=LnkParse3
-pkgver=1.2.0
-pkgrel=2
+pkgver=1.5.2
+_pyver=3.13
+pkgrel=1
 pkgdesc='Windows Shortcut file (LNK) parser.'
 arch=('any')
-url='https://github.com/Matmaus/LnkParse3'
+url='https://pypi.org/project/LnkParse3/'
 license=('MIT')
 depends=('python')
-makedepends=('python-setuptools')
+makedepends=('python-pip' 'python-build' 'python-wheel')
 options=(!emptydirs)
 source=("https://files.pythonhosted.org/packages/source/${_pkgname::1}/$_pkgname/$_pkgname-$pkgver.tar.gz")
-sha512sums=('a585565d77dbdf08aecfc6d434c66ffe56f0ef4e1acbebd569c21b6285cf20ae66d06453ec2776b795d96ae3c872139e07569ef7549338d757f68e0b576bd4aa')
+sha512sums=('6e01142e26e7436ec859f894a8945b193d4d5cf8832e6f9fd3787d17dcd8be097be94c02d478b34277f0291280b758b39a2454ad52baf89d00ebf8c3405b0800')
 
 build() {
   cd "$_pkgname-$pkgver"
 
-  python setup.py build
+  python -m build --wheel --outdir="$startdir/dist"
 }
 
 package() {
   cd "$_pkgname-$pkgver"
 
-  python setup.py install --root="$pkgdir" --prefix=/usr -O1 --skip-build
+  pip install \
+    --verbose \
+    --disable-pip-version-check \
+    --no-warn-script-location \
+    --ignore-installed \
+    --no-compile \
+    --no-deps \
+    --root="$pkgdir" \
+    --prefix=/usr \
+    --no-index \
+    --find-links="file://$startdir/dist" \
+    $_pkgname
+
+  rm -rf "$pkgdir/usr/lib/python${_pyver}/site-packages/tests/"
 }
 

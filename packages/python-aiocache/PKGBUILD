@@ -3,8 +3,8 @@
 
 pkgname=python-aiocache
 _pkgname=aiocache
-pkgver=0.12.1
-_pyver=3.11
+pkgver=0.12.3
+_pyver=3.13
 pkgrel=1
 pkgdesc='Asyncio cache supporting multiple backends (memory,redis and memcached).'
 arch=('any')
@@ -14,7 +14,7 @@ depends=('python' 'python-msgpack' 'python-ujson')
 makedepends=('python-setuptools')
 options=(!emptydirs)
 source=("https://files.pythonhosted.org/packages/source/a/aiocache/$_pkgname-$pkgver.tar.gz")
-sha512sums=('3ad31f92f447fc35dbdf7657fea9a85f401c0b5f3ddacb90ab1e60b09d2b335c31343fede6d1896d522aef7d11010197fcc605dacb706df42c40741e12ef5455')
+sha512sums=('f1caabcc994564255dcef7db31b337c487b4f6add1f9c3256a49e43a1d35210e72e3fcc6ca5e535c92a5d9ea7fed0dfca55d495b0dafae5fa68ffea8e1d9ebc3')
 
 build() {
   cd "$_pkgname-$pkgver"

@@ -2,7 +2,7 @@
 # See COPYING for license details.
 
 pkgname=pe-sieve
-pkgver=0.3.6
+pkgver=0.4.1.1
 pkgrel=1
 pkgdesc='Scans a given process. Recognizes and dumps a variety of potentially malicious implants (replaced/injected PEs, shellcodes, hooks, in-memory patches).'
 url='https://github.com/hasherezade/pe-sieve'
@@ -12,8 +12,8 @@ license=('BSD')
 arch=('any')
 source=("https://github.com/hasherezade/$pkgname/releases/download/v$pkgver/${pkgname}64.exe"
         "https://github.com/hasherezade/$pkgname/releases/download/v$pkgver/${pkgname}32.exe")
-sha512sums=('b4de7b40bc267b1543635aaa76b4fe0b548e87131ef6c1f3dfd2f150713130706c6dfee061d9165e5fe241d7f3783c3059f24f979b3e0f9e9ca24f2ad6cfa808'
-            'c26f7e85568e6e978825ddc0b8566f993301626b898813197577b40cfd31dd196807ebdd25099298b1176e3b0b0655e1b6bf4152395d231af79c63e9a49ffa6d')
+sha512sums=('0ff722b5bb61909dd77e4e3f2e2d302d3b96059767b6f234254065941738152b5c9025d51b694b457534cd18bc51ba8504514bce0b6cfbab38a282d7ec59ae6e'
+            'a5e661a4d82ff3fd7958dccbbe63fbc7ae964f166f93ba2659e05ac78b29f5eed8059682e69866e5f1b4bbb8cb8cbe74f45de15488c9e7d2432ff92fbeba444b')
 
 package() {
   install -Dm 644 -t "$pkgdir/usr/share/windows/$pkgname/" *

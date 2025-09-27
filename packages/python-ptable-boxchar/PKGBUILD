@@ -2,7 +2,7 @@
 # See COPYING for license details.
 
 pkgname=python-ptable-boxchar
-pkgver=242.4aa17e1
+pkgver=243.eb76080
 pkgrel=4
 pkgdesc='Simple Python library designed to make it quick and easy to represent tabular data in visually appealing ASCII tables.'
 arch=('any')

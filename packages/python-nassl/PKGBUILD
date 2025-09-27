@@ -3,7 +3,7 @@
 
 pkgname=python-nassl
 _pkgname=nassl
-pkgver=5.0.1
+pkgver=5.3.0
 pkgrel=1
 epoch=1
 pkgdesc='Experimental Python wrapper for OpenSSL.'
@@ -14,7 +14,7 @@ depends=('python')
 makedepends=('openssl' 'openssl-1.0' 'zlib' 'python-setuptools' 'python-invoke'
              'python-pipenv')
 source=("https://github.com/nabla-c0d3/nassl/archive/$pkgver.tar.gz")
-sha512sums=('1d162a996e07e77a5a98f843855ea8d643be6b0548d33b033d157fd8ab43acbc023ec7a73a46363ebb7c02b75e977b55a6981f16d8c4a4818f02c661cbc559a5')
+sha512sums=('a2c3e434639b41574886497c099f96398a4c591bbab42d10ee023f40ebee047fdd2f3f2229095642345f1309eab74f98654eef0feae966f7e5b9f9d0b8e08bd7')
 
 build() {
   cd "$_pkgname-$pkgver"

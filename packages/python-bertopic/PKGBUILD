@@ -1,0 +1,41 @@
+# This file is part of BlackArch Linux ( https://www.blackarch.org/ ).
+# See COPYING for license details.
+
+pkgname=python-bertopic
+_pkgname=bertopic
+pkgver=0.17.3
+pkgrel=1
+pkgdesc='Performs topic Modeling with state-of-the-art transformer models.'
+arch=('any')
+url='https://pypi.org/project/bertopic/#files'
+license=('MIT')
+depends=('python' 'python-numpy' 'python-hdbscan' 'python-plotly' 'python-spacy'
+         'python-joblib' 'python-tqdm' 'python-umap-learn' 'python-pandas'
+         'python-gensim')
+makedepends=('python-build' 'python-pip' 'python-wheel')
+source=("https://files.pythonhosted.org/packages/source/${_pkgname::1}/$_pkgname/$_pkgname-$pkgver.tar.gz")
+sha512sums=('72abb94f613067b8127a75ec227a2c7e4a525df3d2339a7d8ebd7c05c6a2d0f7a4495e812da99cdff47cb091fba5961b34e803a84d991b3deb460513e3c24ae9')
+
+build() {
+  cd "$_pkgname-$pkgver"
+
+  python -m build --wheel --outdir="$startdir/dist"
+}
+
+package() {
+  cd "$_pkgname-$pkgver"
+
+  pip install \
+    --verbose \
+    --disable-pip-version-check \
+    --no-warn-script-location \
+    --ignore-installed \
+    --no-compile \
+    --no-deps \
+    --root="$pkgdir" \
+    --prefix=/usr \
+    --no-index \
+    --find-links="file://$startdir/dist" \
+    $_pkgname
+}
+

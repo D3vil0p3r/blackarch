@@ -3,8 +3,8 @@
 
 pkgname=python-django-tables2
 _pkgname=django-tables2
-pkgver=2.5.3
-pkgrel=2
+pkgver=2.7.5
+pkgrel=1
 pkgdesc='A module for rendering Django data sets as HTML tables.'
 arch=('any')
 url='https://pypi.org/project/django-tables2/'
@@ -14,7 +14,7 @@ depends=('python-django')
 makedepends=('python-setuptools')
 optdepends=('python-tablib: to export table data as CSV, XLS, etc.')
 source=("https://files.pythonhosted.org/packages/source/${_pkgname::1}/$_pkgname/$_pkgname-$pkgver.tar.gz")
-sha512sums=('83ea19761f1228f16e544d7f6250d30b5bc31d8a36616083abfc6f6cd927d2dff5f301e453cfd9d98d0a9efb077490a3ea59107322f5215823502831856a4857')
+sha512sums=('d117d2a74cbbd82d3727c0864fdac32c76557b3b884a3c293575c64b0e4c4b1664cea539b180796aec96284035188f5586649fb8c050eccdc048ed627b7ddf96')
 
 build() {
   cd "$_pkgname-$pkgver"

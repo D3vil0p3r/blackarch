@@ -2,8 +2,8 @@
 # See COPYING for license details.
 
 pkgname=deepce
-pkgver=108.934a991
-pkgrel=2
+pkgver=121.a08648d
+pkgrel=1
 pkgdesc='Docker Enumeration, Escalation of Privileges and Container Escapes.'
 arch=('any')
 groups=('blackarch' 'blackarch-exploitation')

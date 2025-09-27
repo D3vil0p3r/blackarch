@@ -2,7 +2,7 @@
 # See COPYING for license details.
 
 pkgname=evil-ssdp
-pkgver=94.ee76fb0
+pkgver=96.0d41a11
 pkgrel=5
 pkgdesc='Spoof SSDP replies to phish for NetNTLM challenge/response on a network.'
 groups=('blackarch' 'blackarch-spoof' 'blackarch-sniffer')

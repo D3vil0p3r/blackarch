@@ -3,8 +3,8 @@
 
 pkgname=python-python-socks
 _pkgname=python-socks
-pkgver=2.2.0
-pkgrel=2
+pkgver=2.7.1
+pkgrel=1
 pkgdesc='Core proxy (SOCKS4, SOCKS5, HTTP tunneling) functionality for Python.'
 url='https://pypi.org/project/python-socks/#files'
 arch=('any')
@@ -12,7 +12,7 @@ license=('Apache')
 depends=('python' 'python-asyncio' 'python-trio' 'python-curio')
 makedepends=('python-setuptools')
 source=("https://files.pythonhosted.org/packages/source/${_pkgname::1}/$_pkgname/$_pkgname-$pkgver.tar.gz")
-sha512sums=('f4b5653d8799a98f3b9f37d16bd9c246449c91ee69530388d448e34e1335422ecaaa4725d29d8d895d7ec6d7207203152fdcdd0159cef1dbb00dcbf8a0992af0')
+sha512sums=('23892739ee61a412daba5897b520221d89fa896de9d45c1d2f0c51798c73c4548e7e290835e0836d6bb9dfc024b062abeaac59a0b1c0b1389d57c54c57fc7ce4')
 
 build() {
   cd "$_pkgname-$pkgver"

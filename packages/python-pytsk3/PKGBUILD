@@ -3,8 +3,8 @@
 
 pkgname=python-pytsk3
 _pkgname=pytsk3
-pkgver=20230125
-pkgrel=2
+pkgver=20250312
+pkgrel=1
 pkgdesc='Python bindings for the sleuthkit.'
 arch=('x86_64' 'aarch64')
 url='https://pypi.org/project/pytsk3/#files'
@@ -12,7 +12,7 @@ license=('Apache')
 depends=('python')
 makedepends=('python-setuptools')
 source=("https://files.pythonhosted.org/packages/source/${_pkgname::1}/$_pkgname/$_pkgname-$pkgver.tar.gz")
-sha512sums=('7a87b8189a5062812ee95d2d3d18f0dcc03af21ceaff24b218d4b6006e1a944e20d53099e8f07b25d3168a5bb1f0022841222071dd6ddfde29f941b3d8059fbd')
+sha512sums=('71c836e0d9b18851fde105d038f31e5b654791cd48922b64ea063da9242e017287673df6f727e03d16b2926bd06f4c8970f59a5e36c74fc5f8d9f7f5a9b7e376')
 
 build() {
   cd "$_pkgname-$pkgver"

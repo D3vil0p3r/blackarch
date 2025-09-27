@@ -3,26 +3,37 @@
 
 pkgname=python-rdap
 _pkgname=rdap
-pkgver=1.3.1
-pkgrel=2
+pkgver=1.6.0
+pkgrel=1
 pkgdesc='Registration Data Access Protocol tools.'
 arch=('any')
 url='https://pypi.org/project/rdap/#files'
 license=('Apache')
 depends=('python' 'python-six')
-makedepends=('python-setuptools')
+makedepends=('python-build' 'python-pip')
 source=("https://files.pythonhosted.org/packages/source/${_pkgname::1}/$_pkgname/$_pkgname-$pkgver.tar.gz")
-sha512sums=('edd6bd6a37feddfaf41108eae970f8b48d967301de11fb7b40f721f63b6ad8ba41b4ffeec30a9f5f940d74d67a1cdd1380c582a79ae2610b4bcd95a3ffd20f2a')
+sha512sums=('2e293816b671593bf3980d7a22e18fc735c7b8e910def8c846c2a07872a6bd99439057dedb20052682fd1987eb967d136468c0ffaa4c7e3d7744913d509c2e47')
 
 build() {
   cd "$_pkgname-$pkgver"
 
-  python setup.py build
+  python -m build --wheel --outdir="$startdir/dist"
 }
 
 package() {
   cd "$_pkgname-$pkgver"
 
-  python setup.py install --root="$pkgdir" --prefix=/usr -O1 --skip-build
+  pip install \
+    --verbose \
+    --disable-pip-version-check \
+    --no-warn-script-location \
+    --ignore-installed \
+    --no-compile \
+    --no-deps \
+    --root="$pkgdir" \
+    --prefix=/usr \
+    --no-index \
+    --find-links="file://$startdir/dist" \
+    $_pkgname
 }
 

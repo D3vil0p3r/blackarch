@@ -4,15 +4,15 @@
 pkgbase=python-xhtml2pdf
 pkgname=('python2-xhtml2pdf' 'python-xhtml2pdf')
 _pkgname=xhtml2pdf
-pkgver=0.2.8
-pkgrel=2
+pkgver=0.2.17
+pkgrel=1
 pkgdesc='PDF generator using HTML and CSS.'
 arch=('any')
 url='https://pypi.org/project/xhtml2pdf/#files'
 license=('APACHE')
 makedepends=('python2-setuptools' 'python-setuptools')
 source=("https://files.pythonhosted.org/packages/source/${_pkgname::1}/$_pkgname/$_pkgname-$pkgver.tar.gz")
-sha512sums=('15c46121caac5e2be289e547a1358d81a93352efdb47b4e106aaab93a8b3ff5851a51638b72c2508c4b9c67ecac4edc1a79ab527c2039d79d4c2a3dd7c6708ba')
+sha512sums=('584070777cdbb3b45bdb3701b5598d22b9154434c61f9d0e941d46743862ffb6750cbda28833deed0e0df8305ab3c3df2ba4793b8a18a5728f815a9a17f7a4ed')
 
 prepare() {
   cp -a "$_pkgname-$pkgver"{,-2}

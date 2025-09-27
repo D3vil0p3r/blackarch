@@ -3,8 +3,8 @@
 
 pkgname=python-websockify
 _pkgname=websockify
-pkgver=0.10.0
-pkgrel=2
+pkgver=0.13.0
+pkgrel=1
 pkgdesc='WebSockets support for any application/server.'
 arch=('any')
 url='https://pypi.org/project/websockify/#files'
@@ -12,7 +12,7 @@ license=('LGPL3')
 depends=('python' 'python-numpy')
 makedepends=('python-setuptools')
 source=("https://files.pythonhosted.org/packages/source/${_pkgname::1}/$_pkgname/$_pkgname-$pkgver.tar.gz")
-sha512sums=('1a4d1cbee8f6ddc6cf02d928a1bbc0753991b171dcaec54f3a9d6fafac6d77835d5480eb05006d98b4ff755e6ed1b8e618501f0116a99779823ebf84eb5f84e4')
+sha512sums=('af04b58eab6907e7a32f33e67b3c2fc6d4c2ccc439221199673a73ce7e03547b927141202c610cf4ba6a4814892d650e5e73c11cb0197a595bf0910c9952f8f6')
 
 build() {
   cd "$_pkgname-$pkgver"

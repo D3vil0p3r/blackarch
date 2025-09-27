@@ -3,8 +3,8 @@
 
 pkgname=python-vulners
 _pkgname=vulners
-pkgver=2.0.9
-pkgrel=2
+pkgver=3.0.5
+pkgrel=1
 pkgdesc='Python library and command-line utility for Vulners (https://vulners.com).'
 arch=('any')
 url='https://pypi.org/project/vulners/#files'
@@ -12,7 +12,7 @@ depends=('python-requests' 'python-six')
 makedepends=('python-setuptools')
 license=('GPL3')
 source=("https://files.pythonhosted.org/packages/source/${_pkgname::1}/$_pkgname/$_pkgname-$pkgver.tar.gz")
-sha512sums=('76ff5c97bba873102b50b60b24d4fd070793942d81188f3d3745e65aee85c0be30151dc18b8bacf339ffd6aaa326eb4ca6b1a766fd1ba92fa4ba301b09f2d8e3')
+sha512sums=('69547ac0015e30d909c913a3d25f56646edfdce1829727a1348fbe740eb17f244a1a2fbb73e2447b50a13584cf47fa1457ef0eaaa5c72e697102fd3e55fef607')
 
 build() {
   cd "$_pkgname-$pkgver"

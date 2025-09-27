@@ -2,8 +2,9 @@
 # See COPYING for license details.
 
 pkgname=subfinder
-pkgver=1302.b174ca2
+pkgver=v2.8.0.r26.g45fac832
 pkgrel=1
+epoch=1
 groups=('blackarch' 'blackarch-recon')
 pkgdesc='Modular subdomain discovery tool that can discover massive amounts of valid subdomains for any target.'
 arch=('x86_64' 'aarch64')
@@ -16,11 +17,11 @@ sha512sums=('SKIP')
 pkgver() {
   cd $pkgname
 
-  echo $(git rev-list --count HEAD).$(git rev-parse --short HEAD)
+  git describe --long --tags | sed 's/\([^-]*-g\)/r\1/;s/-/./g'
 }
 
 build() {
-  cd $pkgname/v2
+  cd $pkgname
 
   GOPATH="$srcdir" go mod download
   GOPATH="$srcdir" go build \
@@ -33,9 +34,9 @@ build() {
 }
 
 package() {
-  cd "$pkgname"
+  cd $pkgname
 
-  install -Dm 755 v2/$pkgname "$pkgdir/usr/bin/$pkgname"
+  install -Dm 755 $pkgname "$pkgdir/usr/bin/$pkgname"
 
   install -Dm 644 -t "$pkgdir/usr/share/doc/$pkgname" *.md
   rm "$pkgdir/usr/share/doc/$pkgname/LICENSE.md"

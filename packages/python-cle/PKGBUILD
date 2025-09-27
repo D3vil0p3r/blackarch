@@ -3,8 +3,8 @@
 
 pkgname=python-cle
 _pkgname=cle
-pkgver=9.2.42
-pkgrel=2
+pkgver=9.2.167
+pkgrel=1
 pkgdesc='Interface to analyze what they are and what they would look like in memory.'
 arch=('any')
 url='https://pypi.org/project/cle/#files'
@@ -14,7 +14,7 @@ depends=('python' 'python-pefile' 'python-cffi' 'python-pyvex'
          'python-pyelftools')
 makedepends=('python-setuptools')
 source=("https://files.pythonhosted.org/packages/source/${_pkgname::1}/$_pkgname/$_pkgname-$pkgver.tar.gz")
-sha512sums=('c30c4ec5437541c6ee3afdf7e376a2bf33b6a63c9f763c7b91a6e11f2cd67ae78449a5e70cdcb353664c8ec5784720f1a2d0501c53a8d41818e73794f2a52f3f')
+sha512sums=('71fe8b0b817653834244b794c75d12a4f162bae7e7d7833e2fecf6971725db076805f84e7424870d942834dbb7c341cbe4fe473c6f5a132b3f7b13a31b815dda')
 
 build() {
   cd "$_pkgname-$pkgver"

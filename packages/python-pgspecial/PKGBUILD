@@ -4,15 +4,15 @@
 pkgbase=python-pgspecial
 pkgname=('python2-pgspecial' 'python-pgspecial')
 _pkgname=pgspecial
-pkgver=2.0.1
-pkgrel=2
+pkgver=2.2.1
+pkgrel=1
 pkgdesc='Meta-commands handler for Postgres Database.'
 arch=('any')
 url='https://pypi.org/project/pgspecial/#files'
 license=('BSD')
 makedepends=('python2-setuptools' 'python-setuptools')
 source=("https://files.pythonhosted.org/packages/source/${_pkgname::1}/$_pkgname/$_pkgname-$pkgver.tar.gz")
-sha512sums=('c0a0ed08c8bd101dc05483657233d373d3351cfc5cf14f9f5bb920fd467b17db23cfc4253de8517bb76e8ae574bf36957fbe804aadcb1deca40ef7e29e5a012a')
+sha512sums=('46d45bb92601493359c07b679b12f79c7a4289140805fa1da92736fd01dd4bfec6699e67bcf6a52d2a22d171585084679804b49fe601d5d6675a28c4273df547')
 
 prepare() {
   cp -a "$_pkgname-$pkgver"{,-2}

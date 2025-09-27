@@ -1,0 +1,42 @@
+# This file is part of BlackArch Linux ( https://www.blackarch.org/ ).
+# See COPYING for license details.
+
+pkgname=python-sentence-transformers
+_pkgname=sentence-transformers
+pkgver=5.0.0
+pkgrel=1
+pkgdesc='Multilingual text embeddings.'
+arch=('any')
+url='https://pypi.org/project/sentence-transformers/#files'
+license=('MIT')
+depends=('python' 'python-transformers' 'python-tokenizers' 'python-tqdm'
+         'python-pytorch' 'python-torchvision' 'python-numpy'
+         'python-scikit-learn' 'python-scipy' 'python-nltk'
+         'python-sentencepiece' 'python-huggingface-hub')
+makedepends=('python-build' 'python-pip' 'python-wheel')
+source=("https://files.pythonhosted.org/packages/source/${_pkgname::1}/$_pkgname/$_pkgname-$pkgver.tar.gz")
+sha512sums=('64d2182442f97615e82c91ebc55182b9052098fa874740327faea5d49da02792c9bbb8d55ac3180896c4f392f14585eb3428d9b207e73d96229b8ee0d59e73e5')
+
+build() {
+  cd "$_pkgname-$pkgver"
+
+  python -m build --wheel --outdir="$startdir/dist"
+}
+
+package() {
+  cd "$_pkgname-$pkgver"
+
+  pip install \
+    --verbose \
+    --disable-pip-version-check \
+    --no-warn-script-location \
+    --ignore-installed \
+    --no-compile \
+    --no-deps \
+    --root="$pkgdir" \
+    --prefix=/usr \
+    --no-index \
+    --find-links="file://$startdir/dist" \
+    $_pkgname
+}
+

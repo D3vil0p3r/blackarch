@@ -3,27 +3,38 @@
 
 pkgname=python-enaml
 _pkgname=enaml
-pkgver=0.16.0
-pkgrel=2
+pkgver=0.18.0
+pkgrel=1
 pkgdesc='Declarative DSL for building rich user interfaces in Python.'
 arch=('x86_64' 'aarch64')
 url='https://pypi.org/project/enaml/#files'
 license=('BSD')
 depends=('python' 'python-ply' 'python-kiwisolver' 'python-atom'
          'python-qtpy')
-makedepends=('python-setuptools' 'python-pip' 'python-wheel')
+makedepends=('python-pip' 'python-build' 'python-wheel')
 source=("https://files.pythonhosted.org/packages/source/${_pkgname::1}/$_pkgname/$_pkgname-$pkgver.tar.gz")
-sha512sums=('362a22f8925d1b337addd4f4ddab48b22a8333781c6c45c57c5d6ec638e43e12a11c7e30cfbd2fcb8fe1e5b1413276242ab9aeccac8f92320818befd660bfe43')
+sha512sums=('96b15e084ce3bdfdcb594ac18001de6351b015b6ceba1d9c1369cacabb8b2056ad2b221379db6b694e5c6948839240a6f7d9240292ff577639748685f7783284')
 
 build() {
   cd "$_pkgname-$pkgver"
 
-  python setup.py build
+  python -m build --wheel --outdir="$startdir/dist"
 }
 
-package_python-enaml() {
+package() {
   cd "$_pkgname-$pkgver"
 
-  python setup.py install --prefix=/usr --root="$pkgdir" -O1 --skip-build
+  pip install \
+    --verbose \
+    --disable-pip-version-check \
+    --no-warn-script-location \
+    --ignore-installed \
+    --no-compile \
+    --no-deps \
+    --root="$pkgdir" \
+    --prefix=/usr \
+    --no-index \
+    --find-links="file://$startdir/dist" \
+    $_pkgname
 }
 

@@ -3,8 +3,8 @@
 
 pkgname=python-enlighten
 _pkgname=enlighten
-pkgver=1.11.2
-pkgrel=2
+pkgver=1.14.1
+pkgrel=1
 pkgdesc='Enlighten Progress Bar.'
 arch=('any')
 url='https://pypi.org/project/enlighten/#files'
@@ -14,7 +14,7 @@ makedepends=('python-setuptools')
 license=('MIT')
 options=(!emptydirs)
 source=("https://files.pythonhosted.org/packages/source/${_pkgname::1}/$_pkgname/$_pkgname-$pkgver.tar.gz")
-sha512sums=('22b869bd1a37fdf179a9413d8426cdeec77650772d1c51aac8dccfeba5e5aa8d091aa393596619ad3500dc96b16332f02ef23d9b388806065985354bc382b4a4')
+sha512sums=('c6d9e05614d6eb24ed095ee943644dfc7c3ebff325da3d7695dad6cdbd3338720acd47273bb786657f5f89a2790172a2e9f66a9d42900c06926fe6344f1d5a4c')
 
 build() {
   cd "$_pkgname-$pkgver"
