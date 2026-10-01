@@ -3,8 +3,8 @@
 
 pkgname=python-amqp
 _pkgname=amqp
-pkgver=5.3.1
-pkgrel=3
+pkgver=5.4.0
+pkgrel=1
 pkgdesc='Low-level AMQP client for Python (fork of amqplib).'
 arch=('any')
 url='https://pypi.org/project/amqp/#files'
@@ -12,7 +12,7 @@ license=('MIT')
 depends=('python' 'python-vine')
 makedepends=('python-build' 'python-pip' 'python-wheel')
 source=("https://files.pythonhosted.org/packages/source/${_pkgname::1}/$_pkgname/$_pkgname-$pkgver.tar.gz")
-sha512sums=('4701ee40a6a88738ab2bb199114512af85f722afb99e2ee1d18c48563ceb6f925052315c5ca289e36db5d02aa72412b798442fd6c2f623d10a0ac43af3c2eca8')
+sha512sums=('86b64089ff2a1d19f0b389dda550f1a47031267d17c48cc069f8b5ed8effd964057b85a12176939f80b266f36fe21211fb9ac037acd2383b39f06d71ee4b665e')
 
 build() {
   cd "$_pkgname-$pkgver"
