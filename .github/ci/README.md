@@ -164,8 +164,10 @@ caps each run and the rest is picked up the following days.
 
 ## Manual runs (Actions → Auto-update packages → Run workflow)
 
-* `packages: "foo bar"` — update these if upstream is newer, else rebuild
-  them with `pkgrel+1` (handy after a library soname bump).
+* `packages: "foo bar"` — **added** to the normal run and built first:
+  updated if upstream is newer, else rebuilt with `pkgrel+1` (handy after a
+  library soname bump). Tick `only_these` to build **only** these packages
+  (same as `max_updates: 0` + `audit: 0`).
 * `publish: false` — test without touching master or the repo.
 * `publish_mode: pr|push` — override `PUBLISH_MODE` for this run.
 * `probe_sources: on|off|sundays` — run the URL probe now, skip it, or only

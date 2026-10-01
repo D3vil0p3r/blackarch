@@ -16,9 +16,13 @@ on:
   workflow_dispatch:
     inputs:
       packages:
-        description: 'Only/also these packages (space separated): update if newer, else rebuild'
+        description: 'Extra packages, built first (space separated): updated if upstream is newer, else rebuilt with pkgrel+1'
         type: string
         default: ''
+      only_these:
+        description: 'Build ONLY the packages listed above (no other updates, no audit builds)'
+        type: boolean
+        default: false
       max_updates:
         description: 'Max packages to update in this run'
         type: number
@@ -152,10 +156,19 @@ jobs:
         name: Plan updates
         env:
           FORCE: ${{ inputs.packages }}
-          MAX: ${{ inputs.max_updates || 250 }}
-          AUDIT: ${{ inputs.audit || vars.AUDIT_PER_RUN || 300 }}
+          # format() keeps an explicit 0 (plain `||` would turn 0 into the default)
+          MAX: ${{ format('{0}', inputs.max_updates) }}
+          AUDIT: ${{ format('{0}', inputs.audit) }}
+          AUDIT_VAR: ${{ vars.AUDIT_PER_RUN }}
+          ONLY: ${{ inputs.only_these || false }}
           RETRY: ${{ inputs.retry_failed || false }}
         run: |
+          MAX=${MAX:-250}
+          AUDIT=${AUDIT:-${AUDIT_VAR:-300}}
+          if [ "$ONLY" = true ]; then
+            [ -n "$FORCE" ] || { echo "only_these is set but no packages are listed"; exit 1; }
+            MAX=0 AUDIT=0
+          fi
           set -- --state .ci-state/state --seen .ci-state/seen.json \
                  --pending .ci-state/state/pending.json --force "$FORCE" --max "$MAX" \
                  --audit "$AUDIT"
