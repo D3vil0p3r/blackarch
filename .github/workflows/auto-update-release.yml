@@ -1,0 +1,85 @@
+# Release the packages of a merged auto-update PR (PUBLISH_MODE=pr).
+# The packages were already built and install-tested by the auto-update run
+# whose id is recorded in the PR body; nothing is rebuilt here.
+name: Auto-update release (merged PR)
+
+on:
+  pull_request:
+    types: [closed]
+    branches: [master]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: auto-update-release
+  cancel-in-progress: false
+
+jobs:
+  release:
+    if: >-
+      github.event.pull_request.merged
+      && startsWith(github.event.pull_request.head.ref, 'auto-update/')
+      && github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    container: blackarchlinux/blackarch:latest
+    environment: blackarch-repo
+    timeout-minutes: 120
+    permissions:
+      contents: write          # lists/to-release
+      actions: read            # download artifacts of the original run
+      pull-requests: write     # result comment
+    steps:
+      - name: Install tools
+        run: pacman -Syu --noconfirm --needed --noprogressbar git jq rsync openssh gnupg github-cli
+
+      - uses: actions/checkout@v5
+        with:
+          ref: master
+          token: ${{ secrets.BA_BOT_TOKEN || github.token }}
+
+      - id: run
+        name: Find the run that built this PR
+        env:
+          BODY: ${{ github.event.pull_request.body }}
+        run: |
+          id=$(printf '%s\n' "$BODY" | sed -nE 's/.*auto-update-run-id: ([0-9]+).*/\1/p' | head -n1)
+          [ -n "$id" ] || { echo "no auto-update-run-id marker in the PR body"; exit 1; }
+          echo "id=$id" >> "$GITHUB_OUTPUT"
+
+      - uses: actions/download-artifact@v4
+        with:
+          run-id: ${{ steps.run.outputs.id }}
+          github-token: ${{ github.token }}
+          pattern: results-*
+          path: results
+          merge-multiple: true
+
+      - uses: actions/download-artifact@v4
+        continue-on-error: true      # expired artifacts -> lists/to-release
+        with:
+          run-id: ${{ steps.run.outputs.id }}
+          github-token: ${{ github.token }}
+          pattern: pkgs-*
+          path: pkgs
+          merge-multiple: true
+
+      - name: Release
+        env:
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          RESULTS: ${{ github.workspace }}/results
+          PKGS: ${{ github.workspace }}/pkgs
+          RELEASE: ${{ vars.AUTO_RELEASE || 'true' }}
+          GPG_KEY_ID: ${{ vars.REPO_GPG_KEY_ID }}
+          GPG_PRIVATE_KEY: ${{ secrets.REPO_GPG_PRIVATE_KEY }}
+          GPG_PASSPHRASE: ${{ secrets.REPO_GPG_PASSPHRASE }}
+          SSH_PRIVATE_KEY: ${{ secrets.REPO_SSH_PRIVATE_KEY }}
+          SSH_KNOWN_HOSTS: ${{ vars.REPO_SSH_KNOWN_HOSTS }}
+          SSH_USER: ${{ vars.REPO_SSH_USER }}
+          REPO_SITE: ${{ vars.REPO_SITE }}
+          REPO_SITEDIR: ${{ vars.REPO_SITEDIR }}
+        run: |
+          mkdir -p pkgs
+          .github/ci/release-merged.sh
