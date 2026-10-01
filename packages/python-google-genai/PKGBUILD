@@ -3,7 +3,7 @@
 
 pkgname=python-google-genai
 _pkgname=google_genai
-pkgver=1.66.0
+pkgver=2.26.0
 pkgrel=1
 pkgdesc='GenAI Python SDK.'
 arch=('any')
@@ -17,7 +17,7 @@ makedepends=('python-build' 'python-installer' 'python-setuptools'
              'python-wheel')
 options=(!emptydirs)
 source=("https://files.pythonhosted.org/packages/source/${_pkgname::1}/$_pkgname/$_pkgname-$pkgver.tar.gz")
-sha512sums=('f721343ecc6fa7535f71bb343560f53d97a45c2dc81c3a503b8062f48125daae44377236368ace592d67f9f08ff2331164ec2bd7474ef8549f7011bc35262ab0')
+sha512sums=('a98971e8de85cebc4df0c7b8e2ffd03e5fe4eac3d283c2742e387035fc76957fb8e84f045760fdae1605b03e59b019a445bf9ced71e8c19f56aad2b46f10e3b5')
 
 prepare() {
   cd "$_pkgname-$pkgver"
