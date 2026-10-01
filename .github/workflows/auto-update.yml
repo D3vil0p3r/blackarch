@@ -44,7 +44,7 @@ on:
       probe_sources:
         description: 'Probe every source URL: default = vars.PROBE_SOURCES (sundays if unset)'
         type: choice
-        options: [default, sundays, on, off]
+        options: [default, sundays, 'on', 'off']
         default: default
       retry_failed:
         description: 'Retry packages that already failed for the same upstream version'
