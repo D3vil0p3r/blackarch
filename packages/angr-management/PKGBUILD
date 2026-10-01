@@ -2,8 +2,8 @@
 # See COPYING for license details.
 
 pkgname=angr-management
-pkgver=9.2.179
-pkgrel=3
+pkgver=10.0.1
+pkgrel=1
 pkgdesc='The official angr GUI.'
 groups=('blackarch' 'blackarch-binary' 'blackarch-disassembler'
         'blackarch-reversing')
@@ -13,7 +13,7 @@ license=('BSD-2-Clause')
 depends=('python')
 makedepends=('python-setuptools' 'python-pip')
 source=("https://github.com/angr/$pkgname/archive/refs/tags/v$pkgver.tar.gz")
-sha512sums=('3e6416725a458e4018efd1cd33caeb38d4c2255b4594a72876ae2b9a7f7b12586cfa9e5e72badf326da8a15eab1797f6626f3d1491efffd8055bca23f932a826')
+sha512sums=('36e60e3265fd66ff129f8c92a1df59ff31e21915c0e305553b9881e79e5a5d3db8cc33febe607cff2480f0631949b7e439bd511912aafd2b7106cd026b59559c')
 install="$pkgname.install"
 
 package() {
