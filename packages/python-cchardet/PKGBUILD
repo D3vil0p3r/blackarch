@@ -3,8 +3,8 @@
 
 pkgname=python-cchardet
 _pkgname=cchardet
-pkgver=2.1.7
-pkgrel=9
+pkgver=2.3.0
+pkgrel=1
 pkgdesc='High speed universal character encoding detector.'
 arch=('x86_64' 'aarch64')
 url='https://pypi.org/project/cchardet/#files'
@@ -14,7 +14,7 @@ makedepends=('python-build' 'python-installer' 'python-setuptools'
              'python-wheel' 'cython')
 options=(!emptydirs)
 source=("https://files.pythonhosted.org/packages/source/${_pkgname::1}/$_pkgname/$_pkgname-$pkgver.tar.gz")
-sha512sums=('43e663e30ec079b2a954862de5e8136a2e40f69e300d65eb4ce9d7ffa5d8c496dc7c0937b3306b4096cfad12a1d0617628f8f0115534ab6faf9eb39d2b3935a2')
+sha512sums=('51f69ff174cd5e71c5cb9526c081f3414265511ca354f3c4c1007422d5dc81b3a4a5befe64aa25e1d10c0ac889a0493fa908ac4769fcb74c917eb6ae72b70c61')
 
 build() {
   cd "$_pkgname-$pkgver"
