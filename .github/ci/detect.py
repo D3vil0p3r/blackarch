@@ -637,9 +637,12 @@ def cmd_plan(a) -> None:
 
     # releases first (they matter most to users), then VCS; cap the batch
     updates.sort(key=lambda u: (not u.get("forced"), u["kind"] != "release", u["pkg"]))
-    if a.max and len(updates) > a.max:
-        deferred = updates[a.max:]
-        updates = updates[: a.max]
+    # the cap never drops packages named in --force; 0 means "no updates"
+    forced_u = [u for u in updates if u.get("forced")]
+    normal = [u for u in updates if not u.get("forced")]
+    limit = max(0, a.max)
+    deferred = normal[limit:]
+    updates = forced_u + normal[:limit]
 
     for u in updates:
         u["sha"] = meta.get(u["pkg"], {}).get("sha", "")
@@ -748,7 +751,8 @@ def main() -> None:
     q.add_argument("--force", default="")
     q.add_argument("--max", type=int, default=250)
     q.add_argument("--per-shard", type=int, default=12)
-    q.add_argument("--max-shards", type=int, default=40)
+    q.add_argument("--max-shards", type=int, default=200,
+                   help="GitHub allows 256 matrix jobs; max-parallel limits how many run at once")
     q.add_argument("--retry-failed", action="store_true")
     q.add_argument("--retry-days", type=int, default=7)
     q.add_argument("--pending", help="JSON {pkg: pr_url} from `detect.py pending`")

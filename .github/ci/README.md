@@ -150,6 +150,7 @@ A dry run of the static checks on today's tree already finds real bugs, e.g.
    opens a PR instead of pushing (see above). `AUTO_RELEASE=false` commits
    PKGBUILDs but puts the packages in `lists/to-release` instead of
    uploading. `REPORT_ISSUE=false` disables the tracking issue.
+   `PROBE_SOURCES=off|on|sundays` controls the source-URL probe of the daily run.
 
 ### Suggested rollout
 
@@ -167,8 +168,13 @@ caps each run and the rest is picked up the following days.
   them with `pkgrel+1` (handy after a library soname bump).
 * `publish: false` — test without touching master or the repo.
 * `publish_mode: pr|push` — override `PUBLISH_MODE` for this run.
-* `probe_sources: true` — run the URL probe now.
+* `probe_sources: on|off|sundays` — run the URL probe now, skip it, or only
+  on Sundays. `default` follows the `PROBE_SOURCES` variable (`sundays` if unset).
 * `retry_failed: true` — ignore the failure cache.
+* **Build test only** (no updates): `max_updates: 0`, `audit: 300` (or
+  `4613` for the whole repo in one run: up to 200 shards, 20 at a time,
+  roughly half a day), `publish: false`. Packages named in `packages` are
+  always built, even with `max_updates: 0`.
 
 ## Tuning files
 

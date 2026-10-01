@@ -38,9 +38,10 @@ on:
         options: [default, push, pr]
         default: default
       probe_sources:
-        description: 'Probe every source URL (otherwise only on Sundays)'
-        type: boolean
-        default: false
+        description: 'Probe every source URL: default = vars.PROBE_SOURCES (sundays if unset)'
+        type: choice
+        options: [default, sundays, on, off]
+        default: default
       retry_failed:
         description: 'Retry packages that already failed for the same upstream version'
         type: boolean
@@ -126,12 +127,20 @@ jobs:
 
       - name: Probe source URLs
         env:
-          PROBE: ${{ inputs.probe_sources || false }}
+          PROBE_IN: ${{ inputs.probe_sources || 'default' }}
+          PROBE_VAR: ${{ vars.PROBE_SOURCES || 'sundays' }}
         run: |
-          if [ "$PROBE" = true ] || [ "$(date -u +%u)" = 7 ]; then
+          mode=$PROBE_IN; [ "$mode" = default ] && mode=$PROBE_VAR
+          case $mode in
+            on)      run=yes ;;
+            off)     run=no ;;
+            sundays) [ "$(date -u +%u)" = 7 ] && run=yes || run=no ;;
+            *)       echo "invalid PROBE_SOURCES '$mode' (use sundays, on or off)"; exit 1 ;;
+          esac
+          if [ "$run" = yes ]; then
             python3 .github/ci/probe-sources.py --state .ci-state/state
           else
-            echo "skipped (runs on Sundays or on demand)"
+            echo "source probe skipped (mode: $mode)"
           fi
 
       - name: Find packages already waiting in open auto-update PRs
