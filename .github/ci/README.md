@@ -28,9 +28,21 @@ detect.py plan  shards               pacman -U install test             (sign + 
   the most common untracked hosts so you know where an override pays off.
 * **Clean builds.** Every package builds in its own throw-away
   `blackarchlinux/blackarch:base-devel` container (same base as
-  `travis/Dockerfile`), so missing `makedepends` are caught, then the result
-  is installed with `pacman -U` to catch missing runtime deps and file
-  conflicts. Build jobs have **no secrets**: upstream code runs there.
+  `travis/Dockerfile`), so missing `makedepends` are caught. The packages are
+  then installed with `pacman -U` in a **second, fresh** container, which
+  catches missing runtime depends (including ones only listed in
+  makedepends) and file conflicts.
+* **Build output is not trusted.** Upstream code runs in the build
+  container, so the runner checks everything it returns before it can be
+  published: the PKGBUILD may only differ in `pkgver`, `pkgrel` and (for
+  release updates) the checksums; every package's `.PKGINFO` must name a
+  package of *this* PKGBUILD with exactly the expected version and arch.
+  Anything else is rejected as a build failure. The allowed lines are
+  validated, not skipped: a `pkgver=` line must be exactly `pkgver=<version>`,
+  checksum arrays may only hold quoted digests (with `SKIP` exactly where it
+  was before). Symlinks, FIFOs and oversized files in the output are
+  discarded, and the verified results are written to a directory the
+  container never had access to. Build jobs hold no secrets.
 * **Failures are not retried every day.** A package that failed for upstream
   version X is skipped (but still listed in the report as "previous run")
   until upstream moves past X, 7 days pass, or you run with `retry_failed`.
@@ -47,7 +59,11 @@ detect.py plan  shards               pacman -U install test             (sign + 
 | When packages are uploaded | right after the push | when the PR is merged (`auto-update-release.yml`) |
 | Rebuild on merge? | – | no: the packages built by the run are uploaded |
 | Reviewer drops/edits a package | – | it is not uploaded; it goes to `lists/to-release` |
-| Packages already in an open PR | – | skipped by later runs until the PR is merged/closed |
+| Packages already in an open PR | – | skipped by later runs until the PR is merged/closed (if GitHub can't be asked, a publishing run stops instead of risking a duplicate PR) |
+
+The release workflow uses `pull_request_target`: it runs from master's copy
+of the workflow with ref `master`, so an environment restricted to master
+works, and it only checks out master after the merge.
 
 In `pr` mode build artifacts are kept 14 days; merge within that window or
 the packages land in `lists/to-release` for a manual build. Squash, rebase
@@ -56,6 +72,16 @@ mode with the repository variable `PUBLISH_MODE`, or per run with the
 `publish_mode` input. If PRs are opened with the default token, enable
 *Settings → Actions → Allow GitHub Actions to create and approve pull
 requests*, or set `BA_BOT_TOKEN`.
+
+## Builder image
+
+The `image` job builds `.github/ci/Dockerfile` once per run and pushes it to
+`ghcr.io/<owner>/blackarch-ci-builder`; every build shard pulls that exact
+digest. This avoids ~45 Docker Hub pulls (anonymous pulls are rate-limited)
+and gives every shard the same package versions. If the push is not allowed
+(organisation settings may restrict who can create packages), the shards
+build the image themselves and the run continues with a warning. The
+package can be made public under the organisation's Packages settings.
 
 ## Relation to tests.yml
 
@@ -130,7 +156,11 @@ A dry run of the static checks on today's tree already finds real bugs, e.g.
 
 ## Setup
 
-1. Copy `.github/ci/` and `.github/workflows/auto-update.yml` into the repo.
+1. Copy into the repo: `.github/ci/`, `.github/workflows/auto-update.yml`,
+   `.github/workflows/auto-update-release.yml` (PR mode), and apply the two
+   small patches: `barelease-lock.patch` (barelease only releases a lock it
+   took) and `tests-yml-skip-auto-update.patch` (tests.yml skips the bot's
+   already-tested PRs). The bundle also contains both files already patched.
 2. **Signing key.** Create a dedicated signing key (e.g. "BlackArch CI"),
    sign it with the master key and **add it to `blackarch-keyring`** —
    otherwise users' pacman rejects every package it signs. Never put a
@@ -142,9 +172,17 @@ A dry run of the static checks on today's tree already finds real bugs, e.g.
    * secrets: `REPO_GPG_PRIVATE_KEY` (armored), `REPO_GPG_PASSPHRASE`
      (optional), `REPO_SSH_PRIVATE_KEY`, `BA_BOT_TOKEN` (optional: GitHub App
      / fine-grained token allowed to push to protected `master`)
-   * variables: `REPO_GPG_KEY_ID`, `REPO_SSH_USER`, `REPO_SSH_KNOWN_HOSTS`
-     (output of `ssh-keyscan blackarch.org`), optional `REPO_SITE`,
-     `REPO_SITEDIR` (barelease `-s`/`-d`)
+   * variables: `REPO_GPG_KEY_ID` (use the full fingerprint),
+     `REPO_SSH_USER`, `REPO_SSH_KNOWN_HOSTS` (output of
+     `ssh-keyscan blackarch.org`), optional `REPO_SITEDIR` (barelease `-d`,
+     default `/var/www/blackarch`). The host is always blackarch.org, because
+     `scripts/balock` is hard-wired to it.
+   * Before touching master, push mode checks that the key can sign and that
+     SSH login works; if not, nothing is pushed and the report says why.
+     After `barelease`, the repo database is downloaded again and its
+     signature and new entries are verified.
+   * If a run is cancelled while it holds the repo lock, release it with
+     `scripts/balock -u`.
 5. Repository variables: `AUTO_PUBLISH=true` turns publishing on for the
    daily run (default **off**: builds and reports only). `PUBLISH_MODE=pr`
    opens a PR instead of pushing (see above). `AUTO_RELEASE=false` commits
@@ -158,6 +196,9 @@ A dry run of the static checks on today's tree already finds real bugs, e.g.
    override what the report shows.
 2. `AUTO_PUBLISH=true`, `PUBLISH_MODE=pr` → one PR a day; merging it releases.
 3. `PUBLISH_MODE=push` → fully automatic.
+
+Cancelling a run stops it: build shards that haven't started don't start,
+and nothing is committed or released. The report still runs.
 
 The first run will find many VCS packages behind; `max_updates` (default 250)
 caps each run and the rest is picked up the following days.

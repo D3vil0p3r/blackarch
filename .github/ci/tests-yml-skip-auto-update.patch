@@ -1,0 +1,19 @@
+--- a/.github/workflows/tests.yml	2026-10-01 15:59:47.842224819 +0000
++++ b/.github/workflows/tests.yml	2026-10-01 21:54:52.501720474 +0000
+@@ -20,6 +20,8 @@
+   HEAD_SHA: ${{ github.event.pull_request.head.sha }} 
+ jobs:
+   pkgcheck:
++    # auto-update PRs are already built and install-tested by auto-update.yml
++    if: ${{ !startsWith(github.head_ref, 'auto-update/') }}
+     runs-on: ubuntu-latest
+     container:
+       image: blackarchlinux/blackarch:latest
+@@ -48,6 +50,7 @@
+               fi
+            done
+   build:
++     if: ${{ !startsWith(github.head_ref, 'auto-update/') }}
+      runs-on: ubuntu-latest
+      steps:
+        - uses: actions/checkout@v5

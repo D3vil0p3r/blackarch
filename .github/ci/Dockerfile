@@ -24,7 +24,7 @@ RUN install -d -o builder /home/builder/.config/pacman /home/builder/.gnupg && \
       'keyserver-options auto-key-retrieve' > /home/builder/.gnupg/gpg.conf && \
     chown -R builder: /home/builder && chmod 700 /home/builder/.gnupg
 
-COPY build-one.sh /usr/local/bin/build-one.sh
+COPY build-one.sh install-test.sh /usr/local/bin/
 USER builder
 WORKDIR /build
 ENTRYPOINT ["/usr/local/bin/build-one.sh"]

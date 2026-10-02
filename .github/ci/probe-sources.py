@@ -13,6 +13,7 @@ import concurrent.futures as cf
 import json
 import socket
 import ssl
+import time
 import urllib.error
 import urllib.request
 from pathlib import Path
@@ -41,6 +42,9 @@ def probe(url: str, timeout: float) -> tuple[str, str]:
         except urllib.error.URLError as e:
             r = e.reason
             if isinstance(r, socket.gaierror):
+                if method == "HEAD":      # one retry: runner DNS can hiccup
+                    time.sleep(3)
+                    continue
                 return "broken", f"DNS: {r}"
             if isinstance(r, ConnectionRefusedError):
                 return "broken", "connection refused"

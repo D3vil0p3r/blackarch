@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 # publish.sh - hand successfully built updates over, in one of two modes:
 #
-#   PUBLISH_MODE=push  commit to master, push, then release right away with
-#                      scripts/barelease (default)
+#   PUBLISH_MODE=push  check the release secrets, commit to master, push,
+#                      then release right away with scripts/barelease
 #   PUBLISH_MODE=pr    commit to a branch and open ONE pull request for the
 #                      whole run; release-merged.sh uploads the packages when
 #                      that PR is merged (workflow auto-update-release.yml)
@@ -22,6 +22,11 @@ here=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
 
 MODE=${PUBLISH_MODE:-push}
 [[ $MODE == push || $MODE == pr ]] || { echo "unknown PUBLISH_MODE '$MODE'"; exit 1; }
+mkdir -p "$RESULTS" "$PKGS" "$(dirname "$PUBLISH_OUT")"
+RESULTS=$(realpath "$RESULTS") PKGS=$(realpath "$PKGS")
+PUBLISH_OUT=$(realpath -m "$PUBLISH_OUT")
+export PKGS
+unpack_pkgs || { echo "cannot unpack the built packages"; exit 1; }
 
 committed=() skipped=() released=false release_error="" pr_url=""
 write_out() {
@@ -35,10 +40,15 @@ write_out() {
 trap write_out EXIT
 
 # ------------------------------------------------------------------ select
-mapfile -t ok < <(
-  for s in "$RESULTS"/*/status.json; do
-    jq -r 'select(.result=="ok" and .kind!="test") | .pkg' "$s"   # audit builds are never published
-  done | sort)
+# status.json was rewritten on the runner host by verify-output.py; the
+# package name is the directory name, never a value from the build container
+ok=()
+for d in "$RESULTS"/*/; do
+  pkg=$(basename "$d")
+  [[ -f $d/status.json ]] || continue
+  [[ $(jq -r '.result + "/" + .kind' "$d/status.json") =~ ^ok/(release|vcs|rebuild)$ ]] || continue
+  ok+=("$pkg")
+done
 echo "built OK: ${#ok[@]}  (mode: $MODE)"
 (( ${#ok[@]} )) || exit 0
 
@@ -50,6 +60,9 @@ git fetch --quiet --depth=1 origin "$BASE_SHA" 2>/dev/null || true
 
 todo=()
 for pkg in "${ok[@]}"; do
+  if [[ ! -d packages/$pkg ]]; then
+    skipped+=("$pkg: no such package on master"); continue
+  fi
   if [[ ! -f $RESULTS/$pkg/PKGBUILD ]] || ! compgen -G "$PKGS/$pkg/*.pkg.tar.zst" >/dev/null; then
     skipped+=("$pkg: build artifacts missing"); continue
   fi
@@ -59,11 +72,24 @@ for pkg in "${ok[@]}"; do
   todo+=("$pkg")
 done
 
+# push mode: make sure the upload can work BEFORE anything reaches master
+if [[ $MODE == push && ${RELEASE:-true} == true && ${#todo[@]} -gt 0 ]]; then
+  if ! release_setup; then
+    release_error="not published: $release_error"
+    echo "$release_error"
+    exit 1
+  fi
+fi
+
 # ------------------------------------------------------------------ commit
 if [[ $MODE == pr ]]; then
   branch="auto-update/$(date -u +%Y-%m-%d)-$RUN_ID"
+  # no [skip ci] here: GitHub would then also skip the release workflow
+  # that runs when this PR is merged
+  trailer=()
 else
   branch=master
+  trailer=(-m "[skip ci]")
 fi
 git checkout -q -B "$branch" origin/master
 for pkg in "${todo[@]}"; do
@@ -72,7 +98,7 @@ for pkg in "${todo[@]}"; do
   git diff --cached --quiet && { skipped+=("$pkg: no diff"); continue; }
   ver=$(jq -r .pkgver "$RESULTS/$pkg/status.json")
   git commit -q -m "$pkg: auto-update to $ver." \
-    -m "Built in a clean container and install-tested by $RUN_URL" -m "[skip ci]"
+    -m "Built in a clean container and install-tested by $RUN_URL" "${trailer[@]}"
   committed+=("$pkg")
 done
 (( ${#committed[@]} )) || exit 0
@@ -84,17 +110,19 @@ if [[ $MODE == pr ]]; then
   {
     echo "<!-- auto-update-run-id: $RUN_ID -->"
     echo "Automated update of **${#committed[@]}** packages. Each one was bumped,"
-    echo "built in a clean container and install-tested with \`pacman -U\`"
-    echo "([run]($RUN_URL), build logs in the \`auto-update-report\` artifact)."
+    echo "built in a clean container and install-tested with \`pacman -U\` on a"
+    echo "fresh system ([run]($RUN_URL), build logs in the \`auto-update-report\` artifact)."
     echo
     echo "**Merging this PR uploads the already-built packages to the repo.**"
-    echo "Drop a commit (or edit a PKGBUILD) to keep a package out: it will be"
-    echo "added to \`lists/to-release\` for a manual build instead."
+    echo "To keep a package out, revert its commit before merging. If you edit a"
+    echo "PKGBUILD here instead, that package is not uploaded but added to"
+    echo "\`lists/to-release\` for a manual build."
     echo
     echo "| Package | From | To |"
     echo "|---|---|---|"
     for pkg in "${committed[@]}"; do
-      jq -r '"| `\(.pkg)` | \(.cur) | \(.pkgver) |"' "$RESULTS/$pkg/status.json"
+      jq -r --arg p "$pkg" '"| `\($p)` | \(.cur | gsub("[^A-Za-z0-9._+:~-]";"")) | \(.pkgver | gsub("[^A-Za-z0-9._+]";"")) |"' \
+        "$RESULTS/$pkg/status.json"
     done
     if (( ${#skipped[@]} )); then
       echo
@@ -115,12 +143,22 @@ if [[ $MODE == pr ]]; then
 fi
 
 # ------------------------------------------------------------------ push mode
+pushed=false
 for try in 1 2 3; do
-  git push -q origin HEAD:master && break
-  (( try == 3 )) && { committed=(); echo "push failed"; exit 1; }
+  if git push -q origin HEAD:master; then pushed=true; break; fi
   git fetch -q origin master
-  git rebase -q origin/master || { git rebase --abort; committed=(); echo "rebase conflict"; exit 1; }
+  git rebase -q origin/master || { git rebase --abort; break; }
 done
+if ! $pushed; then
+  committed=()
+  release_error="push to master failed (conflict or permissions); nothing published"
+  echo "$release_error"
+  exit 1
+fi
 echo "pushed ${#committed[@]} commits"
 
-release_packages "${committed[@]}"
+if [[ ${RELEASE:-true} != true ]]; then
+  release_packages "${committed[@]}"     # AUTO_RELEASE=false -> lists/to-release
+  exit 0
+fi
+release_upload "${committed[@]}" || exit 1

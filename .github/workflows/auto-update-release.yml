@@ -3,8 +3,12 @@
 # whose id is recorded in the PR body; nothing is rebuilt here.
 name: Auto-update release (merged PR)
 
+# pull_request_target, not pull_request: the job then runs with ref master
+# (so a `blackarch-repo` environment limited to master still works) and the
+# workflow file always comes from master, not from the PR. It is safe here:
+# it only runs after a merge and only checks out master.
 on:
-  pull_request:
+  pull_request_target:
     types: [closed]
     branches: [master]
 
@@ -48,6 +52,7 @@ jobs:
           echo "id=$id" >> "$GITHUB_OUTPUT"
 
       - uses: actions/download-artifact@v4
+        continue-on-error: true      # expired results -> lists/to-release
         with:
           run-id: ${{ steps.run.outputs.id }}
           github-token: ${{ github.token }}
@@ -69,8 +74,9 @@ jobs:
           PR_NUMBER: ${{ github.event.pull_request.number }}
           GH_TOKEN: ${{ github.token }}
           GH_REPO: ${{ github.repository }}
-          RESULTS: ${{ github.workspace }}/results
-          PKGS: ${{ github.workspace }}/pkgs
+          # relative on purpose: ${{ github.workspace }} is the host path in container jobs
+          RESULTS: results
+          PKGS: pkgs
           RELEASE: ${{ vars.AUTO_RELEASE || 'true' }}
           GPG_KEY_ID: ${{ vars.REPO_GPG_KEY_ID }}
           GPG_PRIVATE_KEY: ${{ secrets.REPO_GPG_PRIVATE_KEY }}
@@ -78,8 +84,5 @@ jobs:
           SSH_PRIVATE_KEY: ${{ secrets.REPO_SSH_PRIVATE_KEY }}
           SSH_KNOWN_HOSTS: ${{ vars.REPO_SSH_KNOWN_HOSTS }}
           SSH_USER: ${{ vars.REPO_SSH_USER }}
-          REPO_SITE: ${{ vars.REPO_SITE }}
           REPO_SITEDIR: ${{ vars.REPO_SITEDIR }}
-        run: |
-          mkdir -p pkgs
-          .github/ci/release-merged.sh
+        run: .github/ci/release-merged.sh

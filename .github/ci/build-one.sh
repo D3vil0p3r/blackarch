@@ -5,9 +5,11 @@
 #   /out     results: status.json, build.log, PKGBUILD, pkgs/*.pkg.tar.zst
 #   env      PKG KIND(release|vcs|rebuild|test) CUR NEW
 #
-# Phases: bump -> verify sources -> build (makepkg -s) -> install test.
-# The container is thrown away afterwards, so every package gets a clean
-# system and missing (make)depends are caught. No secrets are ever present.
+# Phases: bump -> verify sources -> build (makepkg -s).
+# Upstream code runs here, so NOTHING this container writes is trusted: the
+# host (verify-output.py) checks the PKGBUILD diff and every package's
+# .PKGINFO, and install-test.sh then installs the packages in a second,
+# fresh container. No secrets are ever present.
 
 set -uo pipefail
 cd /build || exit 1
@@ -33,8 +35,14 @@ run() { # run <label> <cmd...> ; logs, returns the command's exit code
   "$@" >> "$LOG" 2>&1
 }
 
-pkgver_of() { ( source ./PKGBUILD >/dev/null 2>&1; echo "${pkgver:-}" ); }
-sources_of() { makepkg --printsrcinfo 2>/dev/null | grep -E '^\s*source(_[a-z0-9_]+)? = ' ; }
+# sourcing must not inherit `set -u` (unset $_vars would abort it) and needs CARCH
+# shellcheck disable=SC2034  # CARCH is read by the sourced PKGBUILD
+pkgver_of() { ( set +u; CARCH=x86_64; source ./PKGBUILD >/dev/null 2>&1; echo "${pkgver:-}" ); }
+sources_of() {   # fails only if makepkg fails; a PKGBUILD without sources is fine
+  local info
+  info=$(makepkg --printsrcinfo 2>/dev/null) || return 1
+  grep -E '^\s*source(_[a-z0-9_]+)? = ' <<<"$info" || true
+}
 
 # makepkg exit codes (libmakepkg/util/error.sh)
 classify_makepkg() { # <rc> <phase>
@@ -65,10 +73,15 @@ case $KIND in
     # fetch + run pkgver() only; cheap way to learn whether anything changed
     run "makepkg -od (fetch + pkgver)" makepkg -od --noprepare --noconfirm
     rc=$?
+    if (( rc == 4 )); then   # pkgver() may need (make)depends: retry with them
+      run "makepkg -os (fetch + pkgver, with deps)" makepkg -os --noprepare --noconfirm
+      rc=$?
+    fi
     case $rc in
       0) ;;
       4) status pkgbuild_invalid "pkgver() failed" ;;
       12) status pkgbuild_invalid "makepkg rejected the PKGBUILD (rc=12)" ;;
+      8|15) status build_failed "dependencies could not be installed (rc=$rc)" ;;
       *) status source_broken "cannot fetch VCS source (rc=$rc)" ;;
     esac
     newver=$(pkgver_of)
@@ -100,15 +113,10 @@ shopt -s nullglob
 pkgs=(./*.pkg.tar.zst)
 (( ${#pkgs[@]} )) || status build_failed "makepkg succeeded but produced no .pkg.tar.zst"
 
-# ---------------------------------------------------------------- install test
-# resolves runtime depends against the real repos and catches file conflicts
-run "pacman -U (install test)" sudo pacman -U --noconfirm "${pkgs[@]}" ||
-  status build_failed "built package does not install (missing runtime deps or file conflicts)"
-
 if command -v namcap >/dev/null; then
   run "namcap" namcap "${pkgs[@]}" || true
 fi
 
 cp "${pkgs[@]}" /out/pkgs/
 cp PKGBUILD /out/PKGBUILD
-status ok "built and installed" "$(pkgver_of)"
+status ok "built" "$(pkgver_of)"   # install test runs in a fresh container

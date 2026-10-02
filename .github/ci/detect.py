@@ -48,6 +48,8 @@ PRERELEASE = r"(?i).*(alpha|beta|[^a-z]rc[0-9]*|dev|pre|preview|nightly|snapshot
 # trailing commit hash in a VCS pkgver: 21.59db436, 1.2.r5.g59db436, r123.59db436
 HASH_IN_PKGVER = re.compile(r"(?:^|[._+])g?([0-9a-f]{7,40})$")
 FAILED_RESULTS = {"build_failed", "source_broken", "pkgbuild_invalid"}
+SAFE_URL = re.compile(r"(https?|git|ssh)://[A-Za-z0-9._~:/@%+=-]+")
+SAFE_REF = re.compile(r"[A-Za-z0-9._/+-]+")
 
 
 # --------------------------------------------------------------------------
@@ -107,6 +109,19 @@ def rpmvercmp(a: str, b: str) -> int:
     if (i >= la and not _isalpha(b[j])) or (i < la and _isalpha(a[i])):
         return -1
     return 1
+
+
+def suspicious_jump(cur: str, new: str) -> bool:
+    """1.2 -> 2019 (a date or unrelated tag), or 20190101 -> 3.0"""
+    a, b = re.match(r"[0-9]*", cur).group(0), re.match(r"[0-9]*", new).group(0)
+    if not a or not b:
+        return False
+    return (len(a) <= 3 and len(b) >= 4) or (len(a) >= 4 and len(b) <= 3)
+
+
+def buildable(m: dict) -> bool:
+    """the CI only builds x86_64 (any packages included)"""
+    return not m.get("arch") or bool({"any", "x86_64"} & set(m["arch"]))
 
 
 # --------------------------------------------------------------------------
@@ -206,6 +221,9 @@ def lint(pkg: str, m: dict) -> list[dict]:
                 f"{algo}sums has {n} entries but there are {n_src} sources")
 
     srcs = [split_source(s)[1] for s in m["source"]]
+    if any(re.search(r"pythonhosted\.org/packages/[0-9a-f]{2}/[0-9a-f]{2}/[0-9a-f]{20,}/", x) for x in srcs):
+        add("warning", "pypi-url", "content-hashed PyPI URL can't be bumped automatically; use "
+            "https://files.pythonhosted.org/packages/source/<l>/<name>/<name>-$pkgver.tar.gz")
     has_git = any(s.startswith(("git+", "git://")) for s in srcs)
     if has_git and "git" not in m["makedepends"]:
         add("warning", "makedepends-git", "git source but 'git' not in makedepends")
@@ -237,7 +255,7 @@ def tag_entry(kind: str, project: str, tag: str, ver: str) -> dict | None:
         e["to_pattern"] = r"\1"
     elif prefix:
         e["prefix"] = prefix
-    if not re.fullmatch(PRERELEASE, ver):
+    if not re.fullmatch(PRERELEASE, tag) and not re.fullmatch(PRERELEASE, ver):
         e["exclude_regex"] = PRERELEASE
     return e
 
@@ -258,7 +276,9 @@ def release_entry(url: str, ver: str) -> tuple[dict, str] | None:
             rest = parts[3:]
             if rest[:2] == ["refs", "tags"]:
                 rest = rest[2:]
-            if rest:
+            if len(rest) >= 2 and ver in rest[0]:
+                tag = rest[0]                      # archive/<tag>/<name>.tar.gz
+            elif rest:
                 tag = ARCHIVE_EXT.sub("", "/".join(rest))
         elif parts[2] == "releases" and len(parts) >= 6 and parts[3] == "download":
             tag = parts[4]
@@ -278,6 +298,10 @@ def release_entry(url: str, ver: str) -> tuple[dict, str] | None:
                 "pypi.org") and ver in fname:
         if len(parts) >= 4 and parts[1] == "source":
             name = parts[3]
+        elif len(parts) >= 5 and parts[0] == "packages" and len(parts[3]) >= 20:
+            # content-hashed path (packages/ab/cd/<hash>/file): changes every
+            # release, so a bump can't produce the new URL
+            return None
         else:
             name = fname.split("-" + ver, 1)[0]
         if name and name != fname:
@@ -314,12 +338,17 @@ def git_entry(src: str) -> tuple[dict | None, str]:
     url = src[4:] if src.startswith("git+") else src
     url, _, frag = url.partition("#")
     url = url.split("?", 1)[0]
+    # nvchecker runs `git ls-remote <url> <branch>` through a shell
+    if not SAFE_URL.fullmatch(url):
+        return None, "git URL has unusual characters"
     e = {"source": "git", "git": url, "use_commit": True}
     if frag:
         k, _, v = frag.partition("=")
         if k in ("tag", "commit"):
             return None, f"VCS source pinned to {k}"
         if k == "branch" and v:
+            if not SAFE_REF.fullmatch(v):
+                return None, "git branch name has unusual characters"
             e["branch"] = v
     return e, "git"
 
@@ -544,7 +573,10 @@ def nvchecker_errors(log: Path) -> dict[str, str]:
         for k in ("error", "exc_info", "output", "returncode", "url"):
             if ev.get(k):
                 msg += f" | {k}: {str(ev[k])[-300:]}"
-        errs[ev["name"]] = msg[:600]
+        # nvchecker logs the real error first, then a generic "no-result":
+        # keep every event, first one first
+        prev = errs.get(ev["name"])
+        errs[ev["name"]] = (prev + " || " + msg if prev else msg)[:900]
     return errs
 
 
@@ -605,8 +637,17 @@ def cmd_plan(a) -> None:
                                           "tracking is probably wrong (override it)"})
             if c <= 0:
                 continue
+            if rec.get("via") != "override" and suspicious_jump(rec["cur"], new):
+                issues.append({"pkg": pkg, "category": "upstream_check",
+                               "severity": "warning", "check": "upstream-jump",
+                               "message": f"upstream reports {new} for {rec['cur']}: looks like a "
+                                          "different version scheme (date or unrelated tag), not "
+                                          "updated; add an override if it is real"})
+                continue
             upd = {"pkg": pkg, "kind": "release", "cur": rec["cur"], "new": new}
 
+        if not buildable(meta.get(pkg, {})):
+            continue
         if pkg in pending:     # don't build it again while its PR is open
             waiting.append({**upd, "pr": pending[pkg]})
             continue
@@ -615,22 +656,34 @@ def cmd_plan(a) -> None:
             age = (now - dt.datetime.fromisoformat(s["date"])).days
             if s.get("result") == "no_change":
                 continue
+            if a.skip_built_ok and s.get("result") == "ok":
+                continue   # dry runs: already built fine for this version
             if s.get("result") in FAILED_RESULTS and age < a.retry_days:
                 carried.append({**upd, **{k: s.get(k) for k in ("result", "reason", "date", "run_url")}})
                 continue
         updates.append(upd)
 
-    forced = [p for p in (a.force or "").split() if p]
-    for p in forced:
-        if p not in meta:
+    # names may be split packages (python2-foo) -> their PKGBUILD directory
+    by_name = {}
+    for d, m in meta.items():
+        for n in m.get("pkgname", []):
+            by_name.setdefault(n, d)
+    forced = []
+    for p in (a.force or "").split():
+        d = p if p in meta else by_name.get(p)
+        if not d:
             print(f"warning: forced package '{p}' does not exist", file=sys.stderr)
-            continue
+        elif d not in forced:
+            forced.append(d)
+    for p in forced:
         updates = [u for u in updates if u["pkg"] != p]
         rec = tracking.get(p)
         new = newver.get(p, "")
-        kind = rec["kind"] if rec else ("vcs" if "has_pkgver_func" in meta[p] else "rebuild")
+        kind = rec["kind"] if rec else "rebuild"
         if kind == "release" and not (new and rpmvercmp(new, meta[p]["pkgver"]) > 0):
             kind = "rebuild"
+        if kind == "vcs" and (not new or new.startswith(rec["old"]) or rec["old"].startswith(new)):
+            kind = "rebuild"        # nothing new upstream: rebuild with pkgrel+1
         updates.insert(0, {"pkg": p, "kind": kind, "cur": meta[p]["pkgver"],
                            "new": new if kind != "rebuild" else meta[p]["pkgver"],
                            "forced": True})
@@ -654,7 +707,7 @@ def cmd_plan(a) -> None:
     audit = []
     if a.audit:
         busy = {u["pkg"] for u in updates} | set(pending)
-        cands = [p for p, m in meta.items() if p not in busy
+        cands = [p for p, m in meta.items() if p not in busy and buildable(m)
                  and "fatal" not in m and "syntax_error" not in m and m.get("pkgver")]
 
         def prio(p):
@@ -692,6 +745,7 @@ def cmd_plan(a) -> None:
     if gh_out:
         with open(gh_out, "a") as f:
             f.write(f"count={len(work)}\n")
+            f.write(f"updates={len(updates)}\n")
             f.write("matrix=" + json.dumps({"shard": list(range(n_shards))}) + "\n")
 
 
@@ -724,7 +778,9 @@ def cmd_pending(a) -> None:
                 m = re.fullmatch(r"packages/([^/]+)/PKGBUILD", f["filename"])
                 if m:
                     pending[m.group(1)] = pr["html_url"]
-    except Exception as e:  # noqa: BLE001 - never block the run on this
+    except Exception as e:  # noqa: BLE001
+        if a.strict:   # pr mode: a wrong answer means duplicate PRs
+            sys.exit(f"error: could not list open PRs: {e}")
         print(f"warning: could not list open PRs: {e}", file=sys.stderr)
     Path(a.out).write_text(json.dumps(pending, indent=1, sort_keys=True))
     print(f"packages waiting in open auto-update PRs: {len(pending)}")
@@ -756,12 +812,15 @@ def main() -> None:
     q.add_argument("--retry-failed", action="store_true")
     q.add_argument("--retry-days", type=int, default=7)
     q.add_argument("--pending", help="JSON {pkg: pr_url} from `detect.py pending`")
+    q.add_argument("--skip-built-ok", action="store_true",
+                   help="skip updates that already built OK for the same version (dry runs)")
     q.add_argument("--audit", type=int, default=0,
                    help="also build N not-updated packages as-is (rolling full-repo build test)")
     q.set_defaults(func=cmd_plan)
     r = sub.add_parser("pending")
     r.add_argument("--repo", required=True)
     r.add_argument("--out", required=True)
+    r.add_argument("--strict", action="store_true", help="fail instead of assuming no open PRs")
     r.set_defaults(func=cmd_pending)
     a = p.parse_args()
     a.func(a)

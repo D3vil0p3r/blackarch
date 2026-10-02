@@ -64,19 +64,25 @@ jobs:
     runs-on: ubuntu-latest
     container: blackarchlinux/blackarch:latest
     timeout-minutes: 90
+    permissions:
+      contents: read
+      pull-requests: read          # find packages already waiting in an open PR
     outputs:
       matrix: ${{ steps.plan.outputs.matrix }}
       count: ${{ steps.plan.outputs.count }}
+      updates: ${{ steps.plan.outputs.updates }}
       base_sha: ${{ steps.sha.outputs.sha }}
       publish: ${{ steps.gate.outputs.publish }}
       mode: ${{ steps.gate.outputs.mode }}
     steps:
       - name: Install tools
-        run: pacman -Syu --noconfirm --needed --noprogressbar git jq python nvchecker pkgcheck-arch
+        # python-packaging is an optional nvchecker dependency its pypi source needs
+        run: pacman -Syu --noconfirm --needed --noprogressbar git jq python nvchecker python-packaging pkgcheck-arch
 
+      # the triggering branch: lets you test CI changes on a branch (publishing
+      # is only allowed from master, see the gate below)
       - uses: actions/checkout@v5
         with:
-          ref: master
           persist-credentials: false
 
       - id: sha
@@ -91,7 +97,12 @@ jobs:
           MODE_IN: ${{ inputs.publish_mode || 'default' }}
           MODE_VAR: ${{ vars.PUBLISH_MODE || 'push' }}
         run: |
-          if [ "$INPUT" = auto ]; then echo "publish=$AUTO"; else echo "publish=$INPUT"; fi >> "$GITHUB_OUTPUT"
+          if [ "$INPUT" = auto ]; then publish=$AUTO; else publish=$INPUT; fi
+          if [ "$publish" = true ] && [ "$GITHUB_REF" != refs/heads/master ]; then
+            echo "::notice::not publishing: this run is on $GITHUB_REF, publishing only happens from master"
+            publish=false
+          fi
+          echo "publish=$publish" >> "$GITHUB_OUTPUT"
           if [ "$MODE_IN" = default ]; then mode=$MODE_VAR; else mode=$MODE_IN; fi
           case $mode in push|pr) ;; *) echo "invalid PUBLISH_MODE '$mode'"; exit 1 ;; esac
           echo "mode=$mode" >> "$GITHUB_OUTPUT"
@@ -127,7 +138,7 @@ jobs:
           cd .ci-state/state
           nvchecker -c nvchecker.toml -k "$keyfile" -t 2 --logger json > nvchecker.log 2>&1 || true
           rm -f "$keyfile"
-          echo "versions found: $(jq '.data | length' newver.json)"
+          echo "versions found: $(jq '.data | length' newver.json 2>/dev/null || echo 0)"
 
       - name: Probe source URLs
         env:
@@ -150,7 +161,11 @@ jobs:
       - name: Find packages already waiting in open auto-update PRs
         env:
           GH_TOKEN: ${{ github.token }}
-        run: python3 .github/ci/detect.py pending --repo "$GITHUB_REPOSITORY" --out .ci-state/state/pending.json
+          STRICT: ${{ steps.gate.outputs.publish == 'true' && steps.gate.outputs.mode == 'pr' }}
+        run: |
+          set -- --repo "$GITHUB_REPOSITORY" --out .ci-state/state/pending.json
+          [ "$STRICT" = true ] && set -- "$@" --strict
+          python3 .github/ci/detect.py pending "$@"
 
       - id: plan
         name: Plan updates
@@ -161,6 +176,7 @@ jobs:
           AUDIT: ${{ format('{0}', inputs.audit) }}
           AUDIT_VAR: ${{ vars.AUDIT_PER_RUN }}
           ONLY: ${{ inputs.only_these || false }}
+          PUBLISH: ${{ steps.gate.outputs.publish }}
           RETRY: ${{ inputs.retry_failed || false }}
         run: |
           MAX=${MAX:-250}
@@ -172,6 +188,8 @@ jobs:
           set -- --state .ci-state/state --seen .ci-state/seen.json \
                  --pending .ci-state/state/pending.json --force "$FORCE" --max "$MAX" \
                  --audit "$AUDIT"
+          # dry runs: don't rebuild what already built fine for the same version
+          [ "$PUBLISH" = true ] || set -- "$@" --skip-built-ok
           [ "$RETRY" = true ] && set -- "$@" --retry-failed
           python3 .github/ci/detect.py plan "$@"
 
@@ -183,16 +201,55 @@ jobs:
           retention-days: 14
 
   # ---------------------------------------------------------------------------
+  # Build the builder image once per run (runs alongside detect) and share it
+  # through GitHub's registry: one Docker Hub pull and one `pacman -Syu` per
+  # run instead of one per shard, and every shard gets the same packages.
+  image:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      contents: read
+      packages: write
+    outputs:
+      ref: ${{ steps.push.outputs.ref }}
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          persist-credentials: false
+          sparse-checkout: .github/ci
+
+      - id: push
+        continue-on-error: true      # build jobs then build the image themselves
+        env:
+          GH_TOKEN: ${{ github.token }}
+          ACTOR: ${{ github.actor }}
+        run: |
+          name="ghcr.io/${GITHUB_REPOSITORY_OWNER,,}/blackarch-ci-builder"
+          docker build -t "$name:latest" .github/ci
+          echo "$GH_TOKEN" | docker login ghcr.io -u "$ACTOR" --password-stdin
+          docker push "$name:latest"
+          # shards pull by digest, so a later push can't change this run's image
+          echo "ref=$(docker inspect --format '{{index .RepoDigests 0}}' "$name:latest")" >> "$GITHUB_OUTPUT"
+
+  # ---------------------------------------------------------------------------
   build:
-    needs: detect
-    if: fromJSON(needs.detect.outputs.count || '0') > 0
+    needs: [detect, image]
+    if: >-
+      !cancelled() && needs.detect.result == 'success'
+      && fromJSON(needs.detect.outputs.count || '0') > 0
     runs-on: ubuntu-latest
     timeout-minutes: 340
+    permissions:
+      contents: read
+      packages: read
     strategy:
       fail-fast: false
       max-parallel: 20
       matrix: ${{ fromJSON(needs.detect.outputs.matrix) }}
     steps:
+      - id: start
+        run: echo "t=$(date +%s)" >> "$GITHUB_OUTPUT"
+
       - uses: actions/checkout@v5
         with:
           ref: ${{ needs.detect.outputs.base_sha }}
@@ -210,13 +267,29 @@ jobs:
           docker image prune -af >/dev/null
           df -h .
 
-      - name: Build builder image
-        run: docker build -t ba-builder .github/ci
+      - name: Get the builder image
+        env:
+          IMAGE: ${{ needs.image.outputs.ref }}
+          GH_TOKEN: ${{ github.token }}
+          ACTOR: ${{ github.actor }}
+        run: |
+          if [ -n "$IMAGE" ] &&
+             echo "$GH_TOKEN" | docker login ghcr.io -u "$ACTOR" --password-stdin &&
+             docker pull -q "$IMAGE"; then
+            docker tag "$IMAGE" ba-builder
+          else
+            echo "::warning::shared builder image not available, building it in this job"
+            docker build -t ba-builder .github/ci
+          fi
+          docker logout ghcr.io >/dev/null 2>&1 || true
 
       - name: Bump, build and install-test shard ${{ matrix.shard }}
+        env:
+          JOB_START: ${{ steps.start.outputs.t }}
+          JOB_TIMEOUT_MIN: '340'        # keep equal to this job's timeout-minutes
         run: |
           .github/ci/build-shard.sh ".ci-state/state/shards/${{ matrix.shard }}.json" \
-            packages out/results out/pkgs
+            packages out/results out/pkgs .ci-state/state/meta.json
 
       - uses: actions/upload-artifact@v4
         if: always()
@@ -224,11 +297,25 @@ jobs:
           name: results-${{ matrix.shard }}
           path: out/results/
           retention-days: 30
+          overwrite: true
+
+      # one tar per shard: epoch packages are named name-2:1.0-1-any.pkg.tar.zst
+      # and upload-artifact refuses ':' in file names
+      - name: Pack built packages
+        if: always()
+        env:
+          SHARD: ${{ matrix.shard }}
+        run: |
+          if [ -d out/pkgs ] && [ -n "$(ls -A out/pkgs)" ]; then
+            tar -cf "out/pkgs-$SHARD.tar" -C out/pkgs .
+          fi
 
       - uses: actions/upload-artifact@v4
+        if: always()
         with:
           name: pkgs-${{ matrix.shard }}
-          path: out/pkgs/
+          overwrite: true
+          path: out/pkgs-${{ matrix.shard }}.tar
           retention-days: 14              # PR mode releases these on merge
           if-no-files-found: ignore
           compression-level: 0            # .zst is already compressed
@@ -237,8 +324,9 @@ jobs:
   publish:
     needs: [detect, build]
     if: >-
-      always() && needs.detect.result == 'success' && needs.build.result != 'skipped'
+      !cancelled() && needs.detect.result == 'success' && needs.build.result != 'skipped'
       && needs.detect.outputs.publish == 'true'
+      && fromJSON(needs.detect.outputs.updates || '0') > 0
     runs-on: ubuntu-latest
     container: blackarchlinux/blackarch:latest
     environment: blackarch-repo      # put the secrets here; add reviewers if wanted
@@ -262,6 +350,7 @@ jobs:
           merge-multiple: true
 
       - uses: actions/download-artifact@v4
+        continue-on-error: true            # no package built OK -> no pkgs-* artifact
         with:
           pattern: pkgs-*
           path: pkgs
@@ -270,9 +359,10 @@ jobs:
       - name: Commit and release
         env:
           BASE_SHA: ${{ needs.detect.outputs.base_sha }}
-          RESULTS: ${{ github.workspace }}/results
-          PKGS: ${{ github.workspace }}/pkgs
-          PUBLISH_OUT: ${{ github.workspace }}/publish.json
+          # relative on purpose: ${{ github.workspace }} is the host path in container jobs
+          RESULTS: results
+          PKGS: pkgs
+          PUBLISH_OUT: publish.json
           PUBLISH_MODE: ${{ needs.detect.outputs.mode }}
           RUN_ID: ${{ github.run_id }}
           GH_TOKEN: ${{ secrets.BA_BOT_TOKEN || github.token }}
@@ -285,7 +375,6 @@ jobs:
           SSH_PRIVATE_KEY: ${{ secrets.REPO_SSH_PRIVATE_KEY }}
           SSH_KNOWN_HOSTS: ${{ vars.REPO_SSH_KNOWN_HOSTS }}
           SSH_USER: ${{ vars.REPO_SSH_USER }}
-          REPO_SITE: ${{ vars.REPO_SITE }}
           REPO_SITEDIR: ${{ vars.REPO_SITEDIR }}
         run: .github/ci/publish.sh
 
@@ -347,12 +436,13 @@ jobs:
           name: auto-update-report
           path: report/
           retention-days: 90
+          overwrite: true
 
       - name: Remember results for the next run
         uses: actions/cache/save@v4
         with:
           path: .ci-state/seen.json
-          key: auto-update-seen-${{ github.run_id }}
+          key: auto-update-seen-${{ github.run_id }}-${{ github.run_attempt }}
 
       - name: Update the tracking issue
         if: vars.REPORT_ISSUE != 'false'

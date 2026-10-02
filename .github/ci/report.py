@@ -84,20 +84,29 @@ def main() -> None:
 
     # ------------------------------------------------------------ status db
     for p, r in results.items():
-        if r["result"] in ("skipped", "no_change"):
+        if r["result"] == "skipped":
+            continue
+        if r["result"] == "no_change":   # remembered so the VCS clone isn't repeated daily
+            seen[p] = {"target": r["target"], "result": "no_change", "reason": r["reason"],
+                       "date": today, "run_url": a.run_url}
             continue
         rec = {"result": r["result"], "reason": r["reason"], "kind": r["kind"],
                "pkgver": r.get("pkgver") or r["cur"], "date": today, "run_url": a.run_url}
-        if r["kind"] in ("test", "rebuild"):
+        f = res_dir / p / "PKGBUILD"
+        if r["result"] == "ok" and r["kind"] != "test" and f.exists():
+            # the bumped PKGBUILD is what goes to master
+            builds[p] = {**rec, "sha": hashlib.sha1(f.read_bytes()).hexdigest()}
+        elif r["kind"] in ("test", "rebuild"):
             builds[p] = {**rec, "sha": planned.get(p, {}).get("sha", "")}
-        elif r["result"] == "ok":       # the updated PKGBUILD is what goes to master
-            f = res_dir / p / "PKGBUILD"
-            builds[p] = {**rec, "sha": hashlib.sha1(f.read_bytes()).hexdigest() if f.exists() else ""}
         if r["kind"] != "test":
             seen[p] = {"target": r["target"], "result": r["result"], "reason": r["reason"],
                        "date": today, "run_url": a.run_url}
     builds = {p: b for p, b in builds.items() if p in meta}
-    known = {p: b for p, b in builds.items() if b.get("sha") == meta[p].get("sha")}
+    # updated OK this run: the fingerprint is of the bumped PKGBUILD, which only
+    # reaches master after publishing, so count it as known too
+    updated_now = {p for p, r in results.items() if r["result"] == "ok" and r["kind"] != "test"}
+    known = {p: b for p, b in builds.items()
+             if b.get("sha") == meta[p].get("sha") or p in updated_now}
     stale = len(builds) - len(known)
 
     # ------------------------------------------------------------ problem lists
@@ -308,7 +317,7 @@ def main() -> None:
             for r in ok[:lim]:
                 state = "yes" if r["pkg"] in published else (
                     ("in PR" if publish.get("pr_url") else "committed") if r["pkg"] in committed else "no")
-                L.append(f"| `{r['pkg']}` | {r['cur']} | {r.get('pkgver') or r['target']} | {state} |")
+                L.append(f"| `{r['pkg']}` | {esc(r['cur'])} | {esc(r.get('pkgver') or r['target'])} | {state} |")
         L.append("")
         if publish.get("skipped"):
             L += ["**Not published:** " + "; ".join(publish["skipped"]), ""]

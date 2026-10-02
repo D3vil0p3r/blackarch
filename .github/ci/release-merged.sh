@@ -12,6 +12,11 @@ here=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
 . "$here/lib-release.sh"
 
 released=false release_error=""
+mkdir -p "$RESULTS" "$PKGS"
+RESULTS=$(realpath "$RESULTS") PKGS=$(realpath "$PKGS")
+export PKGS
+unpack_pkgs || { echo "cannot unpack the built packages"; exit 1; }
+comment=$(mktemp)
 git config --global --add safe.directory "$PWD"
 git config user.name  "blackarch-ci[bot]"
 git config user.email "team@blackarch.org"
@@ -52,6 +57,6 @@ fi
     echo "Added to \`lists/to-release\` (changed during review or build artifacts expired):"
     printf -- '- `%s`\n' "${manual[@]}"
   fi
-} > comment.md
-[[ -s comment.md ]] && gh pr comment "$PR_NUMBER" --body-file comment.md || true
+} > "$comment"
+[[ -s $comment ]] && gh pr comment "$PR_NUMBER" --body-file "$comment" || true
 exit "$rc"
