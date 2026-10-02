@@ -37,7 +37,7 @@ jobs:
       - name: Install tools
         run: pacman -Syu --noconfirm --needed --noprogressbar git jq rsync openssh gnupg github-cli
 
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
         with:
           ref: master
           token: ${{ secrets.BA_BOT_TOKEN || github.token }}
@@ -51,7 +51,7 @@ jobs:
           [ -n "$id" ] || { echo "no auto-update-run-id marker in the PR body"; exit 1; }
           echo "id=$id" >> "$GITHUB_OUTPUT"
 
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v8
         continue-on-error: true      # expired results -> lists/to-release
         with:
           run-id: ${{ steps.run.outputs.id }}
@@ -60,7 +60,7 @@ jobs:
           path: results
           merge-multiple: true
 
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v8
         continue-on-error: true      # expired artifacts -> lists/to-release
         with:
           run-id: ${{ steps.run.outputs.id }}

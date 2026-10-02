@@ -1,5 +1,5 @@
 --- a/.github/workflows/tests.yml	2026-10-01 15:59:47.842224819 +0000
-+++ b/.github/workflows/tests.yml	2026-10-01 21:54:52.501720474 +0000
++++ b/.github/workflows/tests.yml	2026-10-02 07:00:00.187857783 +0000
 @@ -20,6 +20,8 @@
    HEAD_SHA: ${{ github.event.pull_request.head.sha }} 
  jobs:
@@ -9,11 +9,24 @@
      runs-on: ubuntu-latest
      container:
        image: blackarchlinux/blackarch:latest
-@@ -48,6 +50,7 @@
+@@ -27,7 +29,7 @@
+       - name: Install dependencies
+         run: |
+           pacman -Syu --noconfirm --needed git pkgcheck-arch nodejs # 'node' needed to test workflow locally by act
+-      - uses: actions/checkout@v5
++      - uses: actions/checkout@v7
+         with:
+           ref: ${{ env.HEAD_REF }}
+           repository: ${{ env.HEAD_REPO }}
+@@ -48,9 +50,10 @@
                fi
             done
    build:
 +     if: ${{ !startsWith(github.head_ref, 'auto-update/') }}
       runs-on: ubuntu-latest
       steps:
-        - uses: actions/checkout@v5
+-       - uses: actions/checkout@v5
++       - uses: actions/checkout@v7
+          with:
+            ref: ${{ env.HEAD_REF }}
+            repository: ${{ env.HEAD_REPO }}

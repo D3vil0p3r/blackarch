@@ -117,19 +117,49 @@ def clean(s, n=300) -> str:
     return s.replace("```", "'''")[:n]
 
 
-def pkginfo(path: Path) -> dict[str, str]:
-    """read .PKGINFO, at most 1 MiB of it (a hostile archive may be a bomb)"""
-    p = subprocess.Popen(["tar", "-I", "zstd", "-xOf", str(path), ".PKGINFO"],
-                         stdout=subprocess.PIPE, stderr=subprocess.DEVNULL)
+# Every .PKGINFO line must be "key = value" with a plain lower-case key.
+# repo-add on the server reads .PKGINFO with `IFS=' =' read var val` and then
+# `declare "$var=$val"`: a key like x[$(cmd)] would run cmd there.
+PKGINFO_LINE = re.compile(r"[a-z]+ = [^\x00-\x1f\x7f]*")
+
+
+def _run(cmd: list[str], limit: int, timeout: int = 120) -> str:
+    """run cmd, keep at most `limit` bytes of stdout (hostile archives may be bombs)"""
+    p = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.DEVNULL)
     try:
-        raw = p.stdout.read(MAX_TEXT).decode(errors="replace")
+        raw = p.stdout.read(limit + 1)
+        truncated = len(raw) > limit
     finally:
         p.kill()
-        p.wait(timeout=30)
+        try:
+            p.wait(timeout=timeout)
+        except subprocess.TimeoutExpired:
+            raise Bad("archive could not be read in time")
+    if truncated:
+        raise Bad("archive listing or .PKGINFO is too large")
+    return raw.decode(errors="replace")
+
+
+def pkginfo(path: Path) -> dict[str, str]:
+    """
+    Read and validate .PKGINFO exactly as repo-add will see it: the archive
+    must hold one .PKGINFO (no ./.PKGINFO or duplicate copies that another tar
+    implementation might pick instead), and every line must be well formed.
+    """
+    members = _run(["tar", "-I", "zstd", "-tf", str(path)], 64 << 20).split("\n")
+    # every spelling of a top-level .PKGINFO another tar might match
+    candidates = [m for m in members if re.fullmatch(r"(\./|/)*\.PKGINFO/?", m)]
+    if candidates != [".PKGINFO"]:
+        raise Bad("package must contain exactly one .PKGINFO at the top level")
+    raw = _run(["tar", "-I", "zstd", "-xOf", str(path), ".PKGINFO"], MAX_TEXT)
     info: dict[str, str] = {}
-    for line in raw.splitlines():
-        k, sep, v = line.partition(" = ")
-        if sep and k in ("pkgname", "pkgver", "arch"):
+    for line in raw.split("\n"):
+        if line == "" or line.startswith("#"):
+            continue
+        if not PKGINFO_LINE.fullmatch(line):
+            raise Bad(".PKGINFO contains a malformed line")
+        k, _, v = line.partition(" = ")
+        if k in ("pkgname", "pkgver", "arch"):
             if k in info:
                 raise Bad(f"duplicate {k} in .PKGINFO")
             info[k] = v.strip()

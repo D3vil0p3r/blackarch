@@ -205,6 +205,10 @@ caps each run and the rest is picked up the following days.
 
 ## Manual runs (Actions → Auto-update packages → Run workflow)
 
+The run summary opens with a **Run settings** table: what was
+chosen for each input and the value actually used (after the repository
+variables filled in `default`/`auto`).
+
 * `packages: "foo bar"` — **added** to the normal run and built first:
   updated if upstream is newer, else rebuilt with `pkgrel+1` (handy after a
   library soname bump). Tick `only_these` to build **only** these packages

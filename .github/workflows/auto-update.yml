@@ -44,7 +44,7 @@ on:
       probe_sources:
         description: 'Probe every source URL: default = vars.PROBE_SOURCES (sundays if unset)'
         type: choice
-        options: [default, sundays, 'on', 'off']
+        options: [default, sundays, 'on', 'off']   # quoted: bare on/off are YAML booleans
         default: default
       retry_failed:
         description: 'Retry packages that already failed for the same upstream version'
@@ -81,7 +81,7 @@ jobs:
 
       # the triggering branch: lets you test CI changes on a branch (publishing
       # is only allowed from master, see the gate below)
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
         with:
           persist-credentials: false
 
@@ -108,7 +108,7 @@ jobs:
           echo "mode=$mode" >> "$GITHUB_OUTPUT"
 
       - name: Restore cache of earlier results
-        uses: actions/cache/restore@v4
+        uses: actions/cache/restore@v6
         with:
           path: .ci-state/seen.json
           key: auto-update-seen-${{ github.run_id }}
@@ -141,17 +141,19 @@ jobs:
           echo "versions found: $(jq '.data | length' newver.json 2>/dev/null || echo 0)"
 
       - name: Probe source URLs
+        id: probe
         env:
           PROBE_IN: ${{ inputs.probe_sources || 'default' }}
           PROBE_VAR: ${{ vars.PROBE_SOURCES || 'sundays' }}
         run: |
           mode=$PROBE_IN; [ "$mode" = default ] && mode=$PROBE_VAR
           case $mode in
-            on)      run=yes ;;
-            off)     run=no ;;
-            sundays) [ "$(date -u +%u)" = 7 ] && run=yes || run=no ;;
-            *)       echo "invalid PROBE_SOURCES '$mode' (use sundays, on or off)"; exit 1 ;;
+            on|true)   mode=on;  run=yes ;;
+            off|false) mode=off; run=no ;;
+            sundays)   [ "$(date -u +%u)" = 7 ] && run=yes || run=no ;;
+            *)         echo "invalid PROBE_SOURCES '$mode' (use sundays, on or off)"; exit 1 ;;
           esac
+          { echo "mode=$mode"; echo "ran=$run"; } >> "$GITHUB_OUTPUT"
           if [ "$run" = yes ]; then
             python3 .github/ci/probe-sources.py --state .ci-state/state
           else
@@ -191,9 +193,65 @@ jobs:
           # dry runs: don't rebuild what already built fine for the same version
           [ "$PUBLISH" = true ] || set -- "$@" --skip-built-ok
           [ "$RETRY" = true ] && set -- "$@" --retry-failed
+          { echo "max=$MAX"; echo "audit=$AUDIT"; } >> "$GITHUB_OUTPUT"
           python3 .github/ci/detect.py plan "$@"
 
-      - uses: actions/upload-artifact@v4
+      - name: Run settings
+        env:
+          PUBLISH: ${{ steps.gate.outputs.publish }}
+          MODE: ${{ steps.gate.outputs.mode }}
+          UPDATES: ${{ steps.plan.outputs.updates }}
+          COUNT: ${{ steps.plan.outputs.count }}
+          MAX: ${{ steps.plan.outputs.max }}
+          AUDIT: ${{ steps.plan.outputs.audit }}
+          PROBE_MODE: ${{ steps.probe.outputs.mode }}
+          PROBE_RAN: ${{ steps.probe.outputs.ran }}
+          IN_PACKAGES: ${{ inputs.packages }}
+          IN_ONLY: ${{ inputs.only_these }}
+          IN_MAX: ${{ inputs.max_updates }}
+          IN_AUDIT: ${{ inputs.audit }}
+          IN_PUBLISH: ${{ inputs.publish }}
+          IN_MODE: ${{ inputs.publish_mode }}
+          IN_PROBE: ${{ inputs.probe_sources }}
+          IN_RETRY: ${{ inputs.retry_failed }}
+        run: |
+          # what was asked for vs what the run actually used (variables fill in
+          # "default"/"auto"); shown at the top of the run summary
+          esc() { printf '%s' "${1:--}" | sed 's/|/\\|/g'; }
+          if [ "$GITHUB_EVENT_NAME" = workflow_dispatch ]; then
+            started="manually by $GITHUB_ACTOR"; ask() { esc "$1"; }
+          else
+            started="by the daily schedule (no inputs)"; ask() { printf '%s' '—'; }
+          fi
+          {
+            echo "## Run settings"
+            echo
+            echo "Started $started on \`${GITHUB_REF#refs/heads/}\`."
+            echo
+            echo "| Setting | Chosen | Used in this run |"
+            echo "|---|---|---|"
+            echo "| packages | $(ask "$IN_PACKAGES") | $(esc "$IN_PACKAGES") |"
+            echo "| only_these | $(ask "$IN_ONLY") | ${IN_ONLY:-false} |"
+            echo "| max_updates | $(ask "$IN_MAX") | $MAX |"
+            echo "| audit | $(ask "$IN_AUDIT") | $AUDIT |"
+            echo "| publish | $(ask "$IN_PUBLISH") | $PUBLISH |"
+            echo "| publish_mode | $(ask "$IN_MODE") | $MODE$([ "$PUBLISH" = true ] || echo ' (not used: not publishing)') |"
+            echo "| probe_sources | $(ask "$IN_PROBE") | $PROBE_MODE ($([ "$PROBE_RAN" = yes ] && echo ran || echo skipped)) |"
+            echo "| retry_failed | $(ask "$IN_RETRY") | ${IN_RETRY:-false} |"
+            echo
+            echo "Planned: **${UPDATES:-0}** updates and **$(( ${COUNT:-0} - ${UPDATES:-0} ))** audit builds."
+          } >> "$GITHUB_STEP_SUMMARY"
+          if [ "$PUBLISH" != true ]; then
+            if [ "$GITHUB_REF" != refs/heads/master ]; then why="the run is on $GITHUB_REF, not master"
+            else why="publishing is off (set the AUTO_PUBLISH variable to true, or run with publish: true)"; fi
+            echo "::notice title=Publish will be skipped::$why. This is a dry run: build and report only."
+          elif [ "${UPDATES:-0}" = 0 ]; then
+            echo "::notice title=Publish will be skipped::no package updates in this run (audit builds are never published)."
+          else
+            echo "::notice title=Publishing::$UPDATES updates, mode: $MODE"
+          fi
+
+      - uses: actions/upload-artifact@v7
         with:
           name: state
           path: .ci-state/
@@ -213,7 +271,7 @@ jobs:
     outputs:
       ref: ${{ steps.push.outputs.ref }}
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
         with:
           persist-credentials: false
           sparse-checkout: .github/ci
@@ -250,12 +308,12 @@ jobs:
       - id: start
         run: echo "t=$(date +%s)" >> "$GITHUB_OUTPUT"
 
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
         with:
           ref: ${{ needs.detect.outputs.base_sha }}
           persist-credentials: false
 
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v8
         with:
           name: state
           path: .ci-state
@@ -291,7 +349,7 @@ jobs:
           .github/ci/build-shard.sh ".ci-state/state/shards/${{ matrix.shard }}.json" \
             packages out/results out/pkgs .ci-state/state/meta.json
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         if: always()
         with:
           name: results-${{ matrix.shard }}
@@ -310,7 +368,7 @@ jobs:
             tar -cf "out/pkgs-$SHARD.tar" -C out/pkgs .
           fi
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         if: always()
         with:
           name: pkgs-${{ matrix.shard }}
@@ -338,18 +396,18 @@ jobs:
       - name: Install tools
         run: pacman -Syu --noconfirm --needed --noprogressbar git jq rsync openssh gnupg github-cli
 
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
         with:
           ref: master
           token: ${{ secrets.BA_BOT_TOKEN || github.token }}
 
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v8
         with:
           pattern: results-*
           path: results
           merge-multiple: true
 
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v8
         continue-on-error: true            # no package built OK -> no pkgs-* artifact
         with:
           pattern: pkgs-*
@@ -378,7 +436,7 @@ jobs:
           REPO_SITEDIR: ${{ vars.REPO_SITEDIR }}
         run: .github/ci/publish.sh
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         if: always()
         with:
           name: publish
@@ -394,24 +452,26 @@ jobs:
       contents: read
       issues: write
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
         with:
           sparse-checkout: .github/ci
           persist-credentials: false
 
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v8
         with:
           name: state
           path: .ci-state
 
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v8
         continue-on-error: true
         with:
           pattern: results-*
           path: results
           merge-multiple: true
 
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v8
+        # only exists when the publish job ran (it is skipped on dry runs)
+        if: needs.publish.result == 'success' || needs.publish.result == 'failure'
         continue-on-error: true
         with:
           name: publish
@@ -431,7 +491,7 @@ jobs:
           cp .ci-state/seen.json report/status-db.json
           head -c 1000000 report/issue.md >> "$GITHUB_STEP_SUMMARY"
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: auto-update-report
           path: report/
@@ -439,7 +499,7 @@ jobs:
           overwrite: true
 
       - name: Remember results for the next run
-        uses: actions/cache/save@v4
+        uses: actions/cache/save@v6
         with:
           path: .ci-state/seen.json
           key: auto-update-seen-${{ github.run_id }}-${{ github.run_attempt }}

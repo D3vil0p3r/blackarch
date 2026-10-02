@@ -29,7 +29,7 @@ jobs:
       - name: Install dependencies
         run: |
           pacman -Syu --noconfirm --needed git pkgcheck-arch nodejs # 'node' needed to test workflow locally by act
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
         with:
           ref: ${{ env.HEAD_REF }}
           repository: ${{ env.HEAD_REPO }}
@@ -53,7 +53,7 @@ jobs:
      if: ${{ !startsWith(github.head_ref, 'auto-update/') }}
      runs-on: ubuntu-latest
      steps:
-       - uses: actions/checkout@v5
+       - uses: actions/checkout@v7
          with:
            ref: ${{ env.HEAD_REF }}
            repository: ${{ env.HEAD_REPO }}
