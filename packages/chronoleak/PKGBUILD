@@ -2,8 +2,8 @@
 # See COPYING for license details.
 
 pkgname=chronoleak
-pkgver=0.0.1
-pkgrel=2
+pkgver=0.0.2
+pkgrel=1
 pkgdesc='ICMP Timestamp Remote Time Leaker.'
 arch=('any')
 groups=('blackarch' 'blackarch-recon')
@@ -12,7 +12,7 @@ license=('MIT')
 depends=('ruby' 'hping')
 source=("https://rubygems.org/downloads/$pkgname-$pkgver.gem")
 noextract=("$pkgname-$pkgver.gem")
-sha512sums=('3880f55a8112e00e40430dfa837142837d58bd84e0357e1afe01af207244b88c44a4bfe5e44d9063ac9fc72530f4e109b97c028ca5d299c226da2c83f613d9d3')
+sha512sums=('d3594fac59aa78419d3151b315d8c732f39d29002dcc77da9ff2a0bef3e8cf86e749d4c966615b42a90f24e145472f435b42ed44dfeb700b9a9a7effb66f6b40')
 
 package() {
   _gemhome="$(gem env home)"
