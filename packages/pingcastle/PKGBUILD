@@ -2,7 +2,7 @@
 # See COPYING for license details.
 
 pkgname=pingcastle
-pkgver=3.4.1.38
+pkgver=4.0.0.20
 pkgrel=1
 pkgdesc='Active Directory scanning tool.'
 groups=('blackarch' 'blackarch-windows')
@@ -10,8 +10,8 @@ arch=('any')
 makedepends=('unzip' 'curl')
 url='https://www.pingcastle.com'
 source=("$pkgname.zip::https://github.com/vletoux/pingcastle/releases/download/$pkgver/PingCastle_$pkgver.zip")
-md5sums=('11071f81520729c6c70439184ed83702')
-sha512sums=('977402302383f1e127c25997b89b8f23fe643f0c59bd07017f79f06d68af3865457031a573767d01d73ef20ae3c9b9d378565bd6dbe23df9f693eb861f2b1377')
+md5sums=('4ffdcbc25bc9fe56d237724fbd3b715b')
+sha512sums=('da7079302ece8fdcba7b291512ff3b6f9ad4c8d9f60b0b1997de06e399469382ceac4ec0622273858469d16f07a2b636d46c964c421e14e2f0d87affeafe81f3')
 
 package() {
   targetDir="$pkgdir/usr/share/windows/$pkgname/"
