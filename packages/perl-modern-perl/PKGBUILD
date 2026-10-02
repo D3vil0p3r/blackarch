@@ -3,8 +3,8 @@
 
 pkgname=perl-modern-perl
 _pkgname=Modern-Perl
-pkgver=1.20200211
-pkgrel=6
+pkgver=1.20250607
+pkgrel=1
 pkgdesc='Enable all of the features of Modern Perl with one command.'
 arch=('any')
 url='https://metacpan.org/release/Modern-Perl'
@@ -12,7 +12,7 @@ license=('GPL' 'PerlArtistic')
 depends=('perl>=5.10.0')
 options=(!emptydirs)
 source=("http://cpan.metacpan.org/authors/id/C/CH/CHROMATIC/$_pkgname-$pkgver.tar.gz")
-sha512sums=('eb647c1b617ca517dc09a2de7395de3aca19b13e7089214127f86257544e790b5b79d439d0896be88c018f2ece47ca2b853168b65d676c4af034dbcc815619be')
+sha512sums=('5c75783615ac780290ba24c327ba1e399183f24c06f9ff3ca8df841ed6896d7f1f36c7e8063d9d86c699dd8226e780131b69099b34ccff5479c1c65a27e19116')
 
 build() {
   cd "$_pkgname-$pkgver"
