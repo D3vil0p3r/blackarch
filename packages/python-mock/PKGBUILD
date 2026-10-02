@@ -3,8 +3,8 @@
 
 pkgname=python-mock
 _pkgname=${pkgname#python-}
-pkgver=3.0.5
-pkgrel=16
+pkgver=5.2.0
+pkgrel=1
 pkgdesc='Mocking and Patching Library for Testing.'
 url='https://github.com/testing-cabal/mock/'
 arch=('any')
@@ -12,7 +12,7 @@ license=('BSD')
 depends=('python' 'python-six' 'python-pbr')
 makedepends=('python-setuptools')
 source=("https://github.com/testing-cabal/mock/archive/$pkgver.tar.gz")
-sha512sums=('9ab4f0c794f5701ba1367d982cf79a5662d4233753d12ed9c88ae20282db1f44be73f84c4d9f6d03ff64926b8c1b6d0c9a79b2a4724a3eb36c247ffd4ab03e2d')
+sha512sums=('30b475312ece26b18d848181c6fcd6773d1ff823af29d8e68a235bd8a7c2c6f88a64bf0be82d5cdf7dd03eb79397bf9b485dea96c623a6197247bf9e2b5cc72a')
 
 build() {
   cd "$_pkgname-$pkgver"
