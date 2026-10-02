@@ -3,8 +3,8 @@
 
 pkgname=perl-net-cidr
 _pkgname=Net-CIDR
-pkgver=0.21
-pkgrel=5
+pkgver=0.27
+pkgrel=1
 pkgdesc='Manipulate IPv4/IPv6 netblocks in CIDR notation.'
 arch=('any')
 license=('PerlArtistic' 'GPL')
@@ -12,7 +12,7 @@ options=('!emptydirs')
 depends=('perl')
 url='http://search.cpan.org/dist/Net-CIDR'
 source=("http://search.cpan.org/CPAN/authors/id/M/MR/MRSAM/$_pkgname-$pkgver.tar.gz")
-sha512sums=('28e7c808173d87a403ab6d924763bdeeef61801775167a11b02bf352d70808821f896f7e3dbb1fd3cd2b42c937f9c6175d1522daddf38c53ee9d242d1a3b5fd1')
+sha512sums=('0d85eed4404c4eaa1a331c25ae7fccbfd906e434ae276e81cf978d4c958c790adc51d3ccbc2d676d51f81c9fd3c3edaca06a689d1801dbb58a558a267d164fe2')
 
 # Function to change to the working directory and set
 # environment variables to override undesired options.
