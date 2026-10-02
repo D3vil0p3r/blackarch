@@ -2,8 +2,8 @@
 # See COPYING for license details.
 
 pkgname=njsscan
-pkgver=0.3.1
-pkgrel=8
+pkgver=1.0.1
+pkgrel=1
 pkgdesc='A static application testing (SAST) tool that can find insecure code patterns in your node.js applications.'
 groups=('blackarch' 'blackarch-code-audit')
 arch=('any')
@@ -15,7 +15,7 @@ depends=('python' 'python-libsast' 'python-tabulate' 'python-sarif-om'
          'python-ruamel-yaml')
 makedepends=('python-setuptools')
 source=("https://files.pythonhosted.org/packages/source/${pkgname::1}/$pkgname/$pkgname-$pkgver.tar.gz")
-sha512sums=('9ef3fdaa3cb7f780458204b723071d051fa3618794555c732aa072efc11cf8b96a5b8a81631f74002c88db521a0b66885f16f44c6492919db41ca27ad1e4e524')
+sha512sums=('dc6c0df9db0cf0c7d9c34b35ac45b7540c3430dfcc64bb6ba357117e060908957650731c79c949e4a3d364a73a259a1234967c36bc6eb1686427eca32efb605b')
 install="$pkgname.install"
 
 build() {
