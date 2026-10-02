@@ -75,13 +75,12 @@ requests*, or set `BA_BOT_TOKEN`.
 
 ## Builder image
 
-The `image` job builds `.github/ci/Dockerfile` once per run and pushes it to
-`ghcr.io/<owner>/blackarch-ci-builder`; every build shard pulls that exact
-digest. This avoids ~45 Docker Hub pulls (anonymous pulls are rate-limited)
-and gives every shard the same package versions. If the push is not allowed
-(organisation settings may restrict who can create packages), the shards
-build the image themselves and the run continues with a warning. The
-package can be made public under the organisation's Packages settings.
+The `image` job builds `.github/ci/Dockerfile` once per run and passes it to
+the build shards as the `builder-image` artifact (kept for one day). This
+avoids one Docker Hub pull per shard (anonymous pulls are rate-limited) and
+gives every shard the same package versions. Nothing is stored under the
+repository's Packages. If the artifact is missing, each shard builds the
+image itself and the run continues with a warning.
 
 ## Relation to tests.yml
 

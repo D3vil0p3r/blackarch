@@ -259,35 +259,40 @@ jobs:
           retention-days: 14
 
   # ---------------------------------------------------------------------------
-  # Build the builder image once per run (runs alongside detect) and share it
-  # through GitHub's registry: one Docker Hub pull and one `pacman -Syu` per
-  # run instead of one per shard, and every shard gets the same packages.
+  # Build the builder image once per run (runs alongside detect) and hand it to
+  # the shards as a short-lived artifact: one Docker Hub pull and one
+  # `pacman -Syu` per run instead of one per shard, every shard gets the same
+  # packages, and nothing is stored as a package on the repository.
   image:
     runs-on: ubuntu-latest
     timeout-minutes: 30
     permissions:
       contents: read
-      packages: write
     outputs:
-      ref: ${{ steps.push.outputs.ref }}
+      ok: ${{ steps.save.outputs.ok }}
     steps:
       - uses: actions/checkout@v7
         with:
           persist-credentials: false
           sparse-checkout: .github/ci
 
-      - id: push
+      - id: save
         continue-on-error: true      # build jobs then build the image themselves
-        env:
-          GH_TOKEN: ${{ github.token }}
-          ACTOR: ${{ github.actor }}
         run: |
-          name="ghcr.io/${GITHUB_REPOSITORY_OWNER,,}/blackarch-ci-builder"
-          docker build -t "$name:latest" .github/ci
-          echo "$GH_TOKEN" | docker login ghcr.io -u "$ACTOR" --password-stdin
-          docker push "$name:latest"
-          # shards pull by digest, so a later push can't change this run's image
-          echo "ref=$(docker inspect --format '{{index .RepoDigests 0}}' "$name:latest")" >> "$GITHUB_OUTPUT"
+          docker build -t ba-builder .github/ci
+          docker save ba-builder | zstd -T0 -3 -q -o ba-builder.tar.zst
+          ls -lh ba-builder.tar.zst
+          echo "ok=true" >> "$GITHUB_OUTPUT"
+
+      - uses: actions/upload-artifact@v7
+        if: steps.save.outputs.ok == 'true'
+        continue-on-error: true
+        with:
+          name: builder-image
+          path: ba-builder.tar.zst
+          retention-days: 1
+          compression-level: 0         # already zstd-compressed
+          overwrite: true
 
   # ---------------------------------------------------------------------------
   build:
@@ -299,7 +304,6 @@ jobs:
     timeout-minutes: 340
     permissions:
       contents: read
-      packages: read
     strategy:
       fail-fast: false
       max-parallel: 20
@@ -325,21 +329,20 @@ jobs:
           docker image prune -af >/dev/null
           df -h .
 
+      - uses: actions/download-artifact@v8
+        if: needs.image.outputs.ok == 'true'
+        continue-on-error: true          # fall back to building the image here
+        with:
+          name: builder-image
+
       - name: Get the builder image
-        env:
-          IMAGE: ${{ needs.image.outputs.ref }}
-          GH_TOKEN: ${{ github.token }}
-          ACTOR: ${{ github.actor }}
         run: |
-          if [ -n "$IMAGE" ] &&
-             echo "$GH_TOKEN" | docker login ghcr.io -u "$ACTOR" --password-stdin &&
-             docker pull -q "$IMAGE"; then
-            docker tag "$IMAGE" ba-builder
+          if [ -f ba-builder.tar.zst ] && zstd -dc ba-builder.tar.zst | docker load -q; then
+            rm -f ba-builder.tar.zst
           else
             echo "::warning::shared builder image not available, building it in this job"
             docker build -t ba-builder .github/ci
           fi
-          docker logout ghcr.io >/dev/null 2>&1 || true
 
       - name: Bump, build and install-test shard ${{ matrix.shard }}
         env:
