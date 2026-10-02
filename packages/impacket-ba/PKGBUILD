@@ -3,7 +3,7 @@
 
 pkgname=impacket-ba
 _pkgname=impacket
-pkgver=0.13.0
+pkgver=0.13.1
 pkgrel=1
 pkgdesc='Collection of classes for working with network protocols.'
 url='https://github.com/fortra/impacket'
@@ -24,7 +24,7 @@ depends=('python'
 )
 options=(!emptydirs)
 source=("https://files.pythonhosted.org/packages/source/${_pkgname::1}/$_pkgname/$_pkgname-$pkgver.tar.gz")
-sha512sums=('a02324d4b3370f501a9f3cd24704eaf04ce17e5c01fe843ce5199d053186003e4c2dd5e4cd1674c1313c8c9ef3fd8738f2d8cc4351a97b1d3deb2d658102b182')
+sha512sums=('6f5e398d07b9a677c90bb420b5e3d2e7c62ab4ab42f429eb618334632919701671e17d06bf55815f3d5da90dfa3c579abe4e3946c73c6017b5e3332e3cdb8183')
 provides=('impacket')
 conflicts=('impacket')
 
