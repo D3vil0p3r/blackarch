@@ -4,15 +4,15 @@
 pkgbase=python-macholib
 pkgname=('python2-macholib' 'python-macholib')
 _pkgname=macholib
-pkgver=1.16.2
-pkgrel=5
+pkgver=1.16.4
+pkgrel=1
 pkgdesc='Mach-O header analysis and editing.'
 arch=('any')
 url='https://pypi.org/project/macholib/#files'
 license=('MIT')
 makedepends=('python2-setuptools' 'python-setuptools')
 source=("https://files.pythonhosted.org/packages/source/${_pkgname::1}/$_pkgname/$_pkgname-$pkgver.tar.gz")
-sha512sums=('8de00c926bb0aa3475675c75e208bd35ac3eeeee16d93fb22f63b34c34b909feb5e3ac441d7a085430fa73d29cd2a61d13a7ab9f993ae2fade36e116bdd42947')
+sha512sums=('3223ceaf9f1c6149caa84434c1478ba65ec4e950b72c3bd9ad09a593c707f7050b2d1d95f36799856dbc410122e810a93a77b00425117aa37bf3cf9a90ca188a')
 
 prepare() {
   cp -a "$_pkgname-$pkgver"{,-2}
