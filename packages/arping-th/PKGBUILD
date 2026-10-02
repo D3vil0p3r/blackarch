@@ -3,8 +3,8 @@
 
 pkgname=arping-th
 _pkgname=arping
-pkgver=2.25
-pkgrel=2
+pkgver=2.29
+pkgrel=1
 pkgdesc='ARP Ping from Thomas Habets (aka Debian arping).'
 arch=('x86_64' 'aarch64')
 groups=('blackarch' 'blackarch-networking')
@@ -12,7 +12,7 @@ url='https://github.com/ThomasHabets/arping'
 license=('GPL-2.0-or-later')
 depends=('libnet' 'libcap' 'libpcap')
 source=("https://github.com/ThomasHabets/arping/archive/refs/tags/$_pkgname-$pkgver.tar.gz")
-sha512sums=('7cfc1ed73bd7621911f9b1b0ad23680c7dde6f8674a0223e6341dc6e40c7d49bb293bc519e9e9de8abaa9209ad7fedad902901235f87b8d21395f3396739b922')
+sha512sums=('ea4df3a8fc94af810d26290228f6fb36e4a8555c6028c332bf68d5d0e05f800fcb03de87a165a8aa3735892b59685a10d455502e484ba1a622ee69f7c9d98df1')
 
 prepare() {
   cd "$_pkgname-$_pkgname-$pkgver"
