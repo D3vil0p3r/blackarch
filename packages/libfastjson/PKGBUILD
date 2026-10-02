@@ -2,14 +2,14 @@
 # See COPYING for license details.
 
 pkgname=libfastjson
-pkgver=0.99.9
+pkgver=1.2609.0
 pkgrel=1
 pkgdesc='A performance-focused json library for C.'
 arch=('x86_64' 'aarch64')
 url='https://github.com/rsyslog/libfastjson'
 license=('GPL')
 source=("https://github.com/rsyslog/$pkgname/archive/v$pkgver.tar.gz")
-sha512sums=('d32d949465dcc94d04be6cd0e1cf78e5653bbbef7e2bd148079a5f4d69102febabd1fe8af668e344b82c62a918d1cc6c9f39a203d65cb1d81409a6d400a63d6a')
+sha512sums=('5a2fcf7f83331bda684a4fa1bb9a0b630f7f006846c5a951ec428d9e2ad986b8dfae6c752a7cf0f86dff9aef43232c8ec7ca3a972889a3c70ea9cbebe241cb5c')
 
 build() {
   cd "$pkgname-$pkgver"

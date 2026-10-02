@@ -3,7 +3,7 @@
 
 pkgname=python-cxxheaderparser
 _pkgname=cxxheaderparser
-pkgver=1.7.0
+pkgver=2.0.0
 pkgrel=1
 pkgdesc='Parse C++ header files and generate a data structure representing the class.'
 arch=('any')
@@ -12,7 +12,7 @@ license=('BSD-3-Clause')
 depends=('python')
 makedepends=('python-build' 'python-pip' 'python-wheel')
 source=("https://files.pythonhosted.org/packages/source/${_pkgname::1}/$_pkgname/$_pkgname-$pkgver.tar.gz")
-sha512sums=('e1f57e8af768157aa984367bdfec6a4a809bf56254e26cd8e10a2383afcb3f336e794738466a6e7c1c0ed9115b98099a4156ae4a182e40e8d09cc4c606b69645')
+sha512sums=('b4893027584389a1bfce7b41f4d2f4c6206be04f5f5640b5b164f5fd7c5b2f58d6d39cb304ab66e54c28eebb40979f56dc7f16ab8d7ca8634a24d45004051d88')
 
 build() {
   cd "$_pkgname-$pkgver"

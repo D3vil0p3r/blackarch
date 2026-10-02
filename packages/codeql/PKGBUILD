@@ -2,7 +2,7 @@
 # See COPYING for license details.
 
 pkgname=codeql
-pkgver=2.22.4
+pkgver=2.27.1
 pkgrel=1
 epoch=1
 groups=('blackarch' 'blackarch-automation' 'blackarch-code-audit')
@@ -12,7 +12,7 @@ url='https://github.com/codeql'
 license=('custom')
 depends=('java-runtime-headless' 'bash')
 source=("$pkgname-v$pkgver.zip::https://github.com/github/codeql-cli-binaries/releases/download/v$pkgver/$pkgname-linux64.zip")
-sha512sums=('61cd0345d2d7c436a1b829b825f4627e9297a6c48e08a820dcf345c9c6cda6ae905ba7806acdab46385434df50d4a95211a71e8b6ae1ccf15f998d888071b9a7')
+sha512sums=('2a0a0e5c27ea58126023a81591ceedad64e3b63bc062bf2c9d83b2c6e251815aaf34d0e55261ebf89ba6176f7543cab396d412edc06b89732c33e0ee64e01c15')
 
 prepare() {
   ln -sf "$pkgname/tools/linux64/lib64trace.so" \

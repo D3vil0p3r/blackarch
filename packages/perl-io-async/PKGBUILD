@@ -6,8 +6,8 @@
 
 pkgname=perl-io-async
 _pkgname=IO-Async
-pkgver=0.78
-pkgrel=5
+pkgver=0.805
+pkgrel=1
 pkgdesc='Asynchronous event-driven programming.'
 arch=('any')
 url='https://metacpan.org/release/IO-Async'
@@ -16,7 +16,7 @@ depends=('perl>=5.10.0' 'perl-future' 'perl-struct-dumb')
 makedepends=('perl-test-fatal' 'perl-test-identity' 'perl-test-refcount')
 options=('!emptydirs' 'purge')
 source=("https://cpan.metacpan.org/authors/id/P/PE/PEVANS/$_pkgname-$pkgver.tar.gz")
-sha512sums=('da3a9ed058000fe254ddcf1d97648278674135c52f7201d200db5c63f7401db297d93932b5b40fb6be79bbe0935e51e6963869563d9467ace63286546c9d2362')
+sha512sums=('497de3601bc58b98f3015cdf0bbbcc3e90b5d267e6b1ed59fb46f7024abdaa5f4966925ba61c4782bcd569a75c621937596f831e7a24de5b385c1bb5278735ce')
 
 build() {
   cd "$_pkgname-$pkgver"

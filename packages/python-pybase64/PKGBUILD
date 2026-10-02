@@ -3,8 +3,8 @@
 
 pkgname=python-pybase64
 _pkgname=pybase64
-pkgver=1.4.3
-pkgrel=2
+pkgver=1.5.0
+pkgrel=1
 pkgdesc='Fast Base64 encoding/decoding.'
 arch=('x86_64' 'aarch64')
 url='https://pypi.org/project/pybase64/#files'
@@ -13,7 +13,7 @@ depends=('python')
 makedepends=('python-setuptools')
 options=(!emptydirs)
 source=("https://files.pythonhosted.org/packages/source/${_pkgname::1}/$_pkgname/$_pkgname-$pkgver.tar.gz")
-sha512sums=('305984d17d117c218312750daaf72d0a4dce2b6a7714fe0ad7f7d732bbe5728f4721d93fd67de742d4ed3cbb8ff30e8b697a9378386ede55bae9ec44a2cda621')
+sha512sums=('8d2734273a1f2adbb1f46f0c39fced812735f5466820a228e89c8768c0560250ce4986837eabdbb535cbf094e211fbe75bad56142556ec76a4729741ec5a01c0')
 
 build() {
   cd "$_pkgname-$pkgver"

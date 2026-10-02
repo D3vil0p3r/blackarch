@@ -7,8 +7,8 @@
 
 pkgname=python-requirementslib
 _pkgname=requirementslib
-pkgver=2.3.0
-pkgrel=5
+pkgver=3.0.0
+pkgrel=1
 pkgdesc='A tool for converting between pip-style and pipfile requirements.'
 url='https://github.com/sarugaku/requirementslib'
 license=('MIT')
@@ -22,10 +22,10 @@ source=("$pkgname-$pkgver.tar.gz::https://github.com/sarugaku/requirementslib/ar
         "git+https://github.com/kennethreitz/requests.git#commit=64bde6582d9b49e9345d9b8df16aaa26dc372d13"
         "git+https://github.com/sarugaku/shellingham.git#commit=9abe7464dab5cc362fe08361619d3fb15f2e16ab"
         "git+https://github.com/pyinstaller/pyinstaller.git#commit=6d4cce1f8eb80c0bf49d35876d28daa55a05800f")
-sha512sums=('b3102d10deb37a7d0070ccf40575a35861e6713a1f12ba695c2237ad10bbf0828154c2f035cba2fcb9e341bfaf604c64c66fe5922f17a2a1fa4fc684e8b2986c'
-            'SKIP'
-            'SKIP'
-            'SKIP')
+sha512sums=('789fc9148883338b9dea6ad3166cf0dabdc8d1934cf84f29fa3af86c5bdf14f4b1f7cdb70a2e0bdc04c5dcc54ddbcb9f653d428a271b1c5b7f60a4c47a06a945'
+            '577848260f3b261b00a074d72b4538221ae33d72f86df0a0a6b7f8f20ccd641c4b8f2ec82b987831f7fed42bbe4f7ea322e2a3e5c1092c3398a45aa4295bca43'
+            'f9c8554973707f658461a10388defed7953cba19088c9e32513b29417f31c38ee182e9f67236d99d56a5f74c35c3724d209c2b7031d036f9e8e30ca8d5554fdf'
+            '127cfce4fa42d61c4d3c8b6c42f7d033f8a248a4a2c6f0a42b4867db70f9a1e1fc6cf671b1db36c2f1cd2f33c7fa9e6f0721c9e0aa8f661ca9396fea98c21354')
 
 prepare() {
   cd "$_pkgname-$pkgver/tests/artifacts/git"

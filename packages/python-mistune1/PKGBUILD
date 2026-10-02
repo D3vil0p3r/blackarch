@@ -3,8 +3,8 @@
 
 pkgname=python-mistune1
 _pkgname=mistune
-pkgver=0.8.4
-pkgrel=9
+pkgver=3.3.4
+pkgrel=1
 pkgdesc='A fast yet powerful Python Markdown parser with renderers and plugins.'
 arch=('any')
 url='https://pypi.org/project/mistune1/#files'
@@ -12,7 +12,7 @@ license=('BSD')
 depends=('python')
 makedepends=('python-setuptools')
 source=("https://files.pythonhosted.org/packages/source/${_pkgname::1}/$_pkgname/$_pkgname-$pkgver.tar.gz")
-sha512sums=('36c3ef5d5537f5cceaa43e4da20a84b27c378cb744a93f0380024faefde490bcb42c453f79002ca049083fc437278f4afb3e10de5462f9eeb9077ca2a2fcaea7')
+sha512sums=('45b6c7182145e3114609fefb7f00f3e006708995a4e646819dfc7ec8ac6419fa6267203bbfa71c83670bb8b16f9f64da24fa86b1bb0142ff6f5db35ddaff379e')
 
 build() {
   cd "$_pkgname-$pkgver"

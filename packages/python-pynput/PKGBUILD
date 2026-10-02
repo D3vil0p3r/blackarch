@@ -3,9 +3,9 @@
 
 pkgname=python-pynput
 _pkgname=pynput
-pkgver=1.8.1
+pkgver=1.8.2
 _pyver=3.14
-pkgrel=2
+pkgrel=1
 pkgdesc='Monitor and control user input devices.'
 arch=('any')
 url='https://pypi.org/project/pynput/#files'
@@ -14,7 +14,7 @@ depends=('python' 'python-six')
 makedepends=('python-setuptools' 'python-pip' 'python-wheel')
 options=(!emptydirs)
 source=("https://github.com/moses-palmer/pynput/archive/refs/tags/v$pkgver.tar.gz")
-sha512sums=('112018ed624cfbe0161b1ae957942c2c02c62ee9db19a58012037a423e3c213b635673782b12d1df4ca235b4ce9ad27f7ad947bacb8263607bce580e8c8a2ab5')
+sha512sums=('5ef306c99fb9ad9d028f01d60347459c5c1a6698f27408e71da8405522597de5c42b8c59adc3f99e5e0223c238cb57e56d669dbcbc021351a190c31dae3e2066')
 
 build() {
   cd "$_pkgname-$pkgver"

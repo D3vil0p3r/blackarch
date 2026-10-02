@@ -2,7 +2,7 @@
 # See COPYING for license details.
 
 pkgname=goshs
-pkgver=0.3.8
+pkgver=2.1.7
 pkgrel=1
 pkgdesc='A SimpleHTTPServer written in Go, enhanced with features and with a nice design.'
 arch=('x86_64' 'aarch64')
@@ -12,7 +12,7 @@ license=('MIT')
 depends=()
 makedepends=('git' 'go')
 source=("$url/archive/refs/tags/v$pkgver.tar.gz")
-sha512sums=('3f5c3cda4ebb460ada1428885e687add36bdbe4e4a65e3ec19dc4280099af7fb6b1fb2fb7574d18264c30551e2efd59e6bf504c9d4222cbaf2941fac39e3a124')
+sha512sums=('13798afca3578d2093b00e974c4f8574d5e75fc1c26ed0f9e58513fc7f6a90223d0d19e8763fb81894aa7590f4b69ecc7095d916c7c9eb95740b8b7c1bc19089')
 
 build() {
   cd "$pkgname-$pkgver"
