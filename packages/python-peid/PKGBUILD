@@ -3,8 +3,8 @@
 
 pkgname=python-peid
 _pkgname=peid
-pkgver=2.2.1
-pkgrel=4
+pkgver=2.3.1
+pkgrel=1
 pkgdesc='Python implementation of the Packed Executable iDentifier (PEiD).'
 arch=('any')
 groups=('blackarch' 'blackarch-binary' 'blackarch-reversing')
@@ -12,7 +12,7 @@ license=('GPL3')
 depends=('python' 'python-pefile' 'python-pip')
 makedepends=('python-build')
 source=("https://files.pythonhosted.org/packages/source/${_pkgname::1}/$_pkgname/$_pkgname-$pkgver.tar.gz")
-sha512sums=('1feeea32802f9ffd652f13bad3cc9988347161e8224eecef90bc0242222fd67b05299d24720df238f09e0cde13f3567369c87ffeb3f54602017f657e903c2125')
+sha512sums=('79f0f9903c1574cec9f3010b7dcecab280fedc9b2c0294b5515da98494b26fe69432b8f4ea3ef7eb9aa11ab4a3f512772528aa5e1fb3d2e8599aab01074598f7')
 
 build() {
   cd "$_pkgname-$pkgver"
