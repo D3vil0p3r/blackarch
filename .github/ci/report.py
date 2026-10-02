@@ -8,7 +8,7 @@ report.py - final report of an auto-update run.
 Writes into --out:
   report.json   everything, machine readable
   report.md     full report (all rows, build-log tails)
-  issue.md      same, trimmed to fit a GitHub issue / job summary
+  issue.md      same sections, fewer rows per section so it fits a GitHub issue
 and --seen-out: the status database for the next run
   packages{}    last update attempt per package (skip same failing version)
   builds{}      last build result of each package's *current* PKGBUILD
@@ -321,8 +321,10 @@ def main() -> None:
     (out / "report.json").write_text(json.dumps(report, indent=1))
 
     # ------------------------------------------------------------ markdown
-    def md(full: bool) -> str:
-        lim = None if full else 120
+    def md(full: bool, lim: int | None = None) -> str:
+        """full=True: every row and log tail; otherwise at most `lim` rows per section"""
+        if full:
+            lim = None
         t = totals
         L = [f"# BlackArch auto-update report — {now:%Y-%m-%d}", ""]
         if a.run_url:
@@ -365,7 +367,7 @@ def main() -> None:
                     L.append(f"| `{x['pkg']}` | {x['severity']} | {esc(x['found_by'])} | {esc(x['detail'])[:260]} |")
             L.append("")
             if lim and len(rows) > lim:
-                L += [f"_… {len(rows) - lim} more in report.json_", ""]
+                L += [f"_… {len(rows) - lim} more in report.md / report.json_", ""]
             if full:
                 for x in rows:
                     if x.get("log_tail"):
@@ -380,6 +382,8 @@ def main() -> None:
                 L.append(f"| `{x['pkg']}` | {x['problem']} | {', '.join(x['produces'])} | {esc(x['verdict'])} "
                          f"| {esc(x['needed_by'])} |")
         L.append("")
+        if lim and len(removal) > lim:
+            L += [f"_… {len(removal) - lim} more in report.md / report.json_", ""]
 
         L += [f"## 🐍 Python 2 packages that nothing hard-depends on ({len(py2)})", "",
               "No depends/makedepends/checkdepends on them anywhere in the tree "
@@ -392,7 +396,7 @@ def main() -> None:
                          f"| {', '.join(x['optdepends_of']) or '—'} | {x['action']} |")
         L.append("")
         if lim and len(py2) > lim:
-            L += [f"_… {len(py2) - lim} more in report.json_", ""]
+            L += [f"_… {len(py2) - lim} more in report.md / report.json_", ""]
 
         L += [f"## 📦 Also in Arch official repositories ({t['also_in_arch']})", "",
               "Packages built here that Arch also ships in core/extra/multilib, or that are "
@@ -410,7 +414,7 @@ def main() -> None:
                          f"| {esc(x['action'])} |")
         L.append("")
         if lim and len(in_arch) > lim:
-            L += [f"_… {len(in_arch) - lim} more in report.json_", ""]
+            L += [f"_… {len(in_arch) - lim} more in report.md / report.json_", ""]
 
         L += [f"## ✅ Updated ({len(ok)})", ""]
         if ok:
@@ -420,6 +424,8 @@ def main() -> None:
                     ("in PR" if publish.get("pr_url") else "committed") if r["pkg"] in committed else "no")
                 L.append(f"| `{r['pkg']}` | {esc(r['cur'])} | {esc(r.get('pkgver') or r['target'])} | {state} |")
         L.append("")
+        if lim and len(ok) > lim:
+            L += [f"_… {len(ok) - lim} more in report.md / report.json_", ""]
         if publish.get("skipped"):
             L += ["**Not published:** " + "; ".join(publish["skipped"]), ""]
         if warnings:
@@ -437,9 +443,19 @@ def main() -> None:
         return "\n".join(L)
 
     (out / "report.md").write_text(md(True))
-    issue = md(False)
-    if len(issue) > 60000:
-        issue = issue[:59000] + "\n\n… truncated, see the report artifact.\n"
+    # GitHub issue bodies are limited to 65536 characters. Keep every section
+    # and shrink the number of rows shown per section until the text fits.
+    issue_limit = 60000
+    for rows in (100, 75, 50, 35, 25, 15, 10, 5, 3, 1):
+        issue = md(False, rows)
+        if len(issue) <= issue_limit:
+            break
+    if rows < 100:
+        issue = issue.replace("\n## ", f"\n> Showing at most {rows} rows per section to fit "
+                              "the issue; the full lists are in report.md / report.json in the "
+                              "`auto-update-report` artifact.\n\n## ", 1)
+    if len(issue) > issue_limit:      # last resort: even 1 row per section is too long
+        issue = issue[:issue_limit - 1000] + "\n\n… truncated, see the report artifact.\n"
     (out / "issue.md").write_text(issue)
 
     cutoff = now - dt.timedelta(days=60)
