@@ -133,6 +133,20 @@ hard-depends on**, which lists every `python2-*` output, including the
 Only the BlackArch tree is considered; something an end user installs
 directly, or an AUR package that depends on it, is invisible here.
 
+## Duplicates of Arch Linux packages
+
+Each run lists Arch's official `core`, `extra` and `multilib` packages (not
+the AUR) and the report's **Also in Arch official repositories** section shows:
+
+* packages built in `packages/` that Arch also ships, with both versions, how
+  many BlackArch packages depend on them, and a ready-to-paste suggestion
+  (remove `packages/<name>`, add `<name> <groups>` to `lists/official`). For
+  split PKGBUILDs each output is checked separately;
+* packages that are both built in `packages/` and listed in `lists/official`.
+
+Nothing is removed automatically: a copy may be kept on purpose (newer,
+patched, or an unrelated program with the same name).
+
 ## Report
 
 Artifact `auto-update-report` (and the issue labelled `auto-update-report`):

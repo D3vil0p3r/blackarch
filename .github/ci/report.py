@@ -40,6 +40,33 @@ def esc(s) -> str:
     return str(s).replace("|", "\\|").replace("\n", " ").strip()
 
 
+@__import__("functools").lru_cache(None)
+def _detect():
+    """rpmvercmp from detect.py (same directory)"""
+    import importlib.util
+    spec = importlib.util.spec_from_file_location("detect", Path(__file__).with_name("detect.py"))
+    mod = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(mod)
+    return mod
+
+
+def vercmp(a: str, b: str) -> int:
+    """pacman's vercmp on full versions: [epoch:]pkgver[-pkgrel]"""
+    rpm = _detect().rpmvercmp
+
+    def split(v):
+        e, _, rest = v.partition(":") if ":" in v else ("0", "", v)
+        ver, _, rel = rest.rpartition("-") if "-" in rest else (rest, "", "")
+        return int(e) if e.isdigit() else 0, ver, rel
+    (ea, va, ra), (eb, vb, rb) = split(a), split(b)
+    if ea != eb:
+        return 1 if ea > eb else -1
+    c = rpm(va, vb)
+    if c or not ra or not rb:
+        return c
+    return rpm(ra, rb)
+
+
 def load(path, default):
     p = Path(path) if path else None
     return json.loads(p.read_text()) if p and p.exists() else default
@@ -211,6 +238,52 @@ def main() -> None:
                         "action": (f"drop package_{n}() from {d}" if others
                                    else f"remove package {d}")})
 
+    # ------------------------------------------------------------ duplicates of Arch packages
+    arch = {}
+    for line in ((st / "arch-official.txt").read_text().splitlines()
+                 if (st / "arch-official.txt").exists() else []):
+        f = line.split()
+        if len(f) >= 3:
+            arch.setdefault(f[1], (f[0], f[2]))
+    official_list = {}
+    for line in ((st / "lists-official.txt").read_text().splitlines()
+                 if (st / "lists-official.txt").exists() else []):
+        f = line.split("#", 1)[0].split()
+        if f:
+            official_list[f[0]] = f[1:]
+    in_arch = []
+    for d, m in sorted(meta.items()):
+        outs = m.get("pkgname") or [d]
+        dup = [n for n in outs if n in arch]
+        listed = [n for n in outs if n in official_list]
+        if not dup and not listed:
+            continue
+        ba_full = ((m.get("epoch") + ":") if m.get("epoch") else "") + \
+            f"{m.get('pkgver', '')}-{m.get('pkgrel', '')}"
+        groups = [g for g in m.get("groups", []) if g != "blackarch"]
+        for n in sorted(set(dup) | set(listed)):
+            repo, aver = arch.get(n, ("", ""))
+            if aver and "has_pkgver_func" in m:
+                newer = "not comparable (BlackArch builds from git)"
+            elif aver:
+                c = vercmp(aver, ba_full)
+                newer = "Arch is newer" if c > 0 else ("same" if c == 0 else "BlackArch is newer")
+            else:
+                newer = "not in Arch's repos"
+            nb = len([r for r in graph.get(d, {}).get("names", {}).get(n, []) if r["pkg"] != d])
+            whole = set(outs) <= set(dup)
+            if not aver:
+                action = (f"remove `{n}` from lists/official: it is not in Arch's repos, "
+                          f"and BlackArch builds it itself")
+            elif whole:
+                action = (f"remove packages/{d}; add `{n} {' '.join(groups)}` to lists/official"
+                          if n not in official_list else f"remove packages/{d} (already in lists/official)")
+            else:
+                action = f"drop package_{n}() from {d}; add `{n} {' '.join(groups)}` to lists/official"
+            in_arch.append({"pkg": n, "dir": d, "blackarch": ba_full, "arch_repo": repo,
+                            "arch": aver, "compare": newer, "in_lists_official": n in official_list,
+                            "blackarch_dependents": nb, "action": action.replace("  ", " ")})
+
     published = set(publish.get("committed", [])) if publish.get("released") else set()
     committed = set(publish.get("committed", []))
     ok = sorted((r for r in results.values() if r["result"] == "ok" and r["kind"] != "test"),
@@ -228,9 +301,11 @@ def main() -> None:
         "skipped": sum(r["result"] == "skipped" for r in results.values()),
         **{c: len({x["pkg"] for x in lists[c]}) for c in CATS},
         "removal_candidates": len(removal), "python2_unused": len(py2),
+        "also_in_arch": len({x["dir"] for x in in_arch}),
     }
     report = {"generated": today, "run_url": a.run_url, "totals": totals, **lists,
               "removal_candidates": removal, "python2_without_hard_dependents": py2,
+              "also_in_arch_official": in_arch,
               "updated": [{"pkg": r["pkg"], "from": r["cur"], "to": r.get("pkgver") or r["target"],
                            "committed": r["pkg"] in committed, "released": r["pkg"] in published}
                           for r in ok],
@@ -258,7 +333,8 @@ def main() -> None:
               f"| 🔗 Broken sources | {t['source_broken']} |",
               f"| 🧩 Invalid PKGBUILD structure | {t['pkgbuild_invalid']} |",
               f"| 🗑️ Failing and safe(ish) to remove | {t['removal_candidates']} |",
-              f"| 🐍 python2 packages nothing hard-depends on | {t['python2_unused']} |", ""]
+              f"| 🐍 python2 packages nothing hard-depends on | {t['python2_unused']} |",
+              f"| 📦 Also in Arch official repositories | {t['also_in_arch']} |", ""]
         if publish.get("pr_url"):
             L += [f"> 📬 **Pull request:** {publish['pr_url']} — packages are released when it is merged.", ""]
         if publish.get("release_error"):
@@ -310,6 +386,24 @@ def main() -> None:
         L.append("")
         if lim and len(py2) > lim:
             L += [f"_… {len(py2) - lim} more in report.json_", ""]
+
+        L += [f"## 📦 Also in Arch official repositories ({t['also_in_arch']})", "",
+              "Packages built here that Arch also ships in core/extra/multilib, or that are "
+              "both built here and listed in `lists/official`. Usually the BlackArch copy can be "
+              "dropped in favour of `lists/official`; check first whether it is kept on purpose "
+              "(newer, patched, or an unrelated program with the same name). Dependents keep "
+              "working: the package name stays the same.", ""]
+        if in_arch:
+            L += ["| Package | PKGBUILD | BlackArch | Arch | | In lists/official | BlackArch dependents | Suggested action |",
+                  "|---|---|---|---|---|---|---|---|"]
+            for x in in_arch[:lim]:
+                arch_col = f"{x['arch']} ({x['arch_repo']})" if x["arch"] else "—"
+                L.append(f"| `{x['pkg']}` | {x['dir']} | {esc(x['blackarch'])} | {esc(arch_col)} | {x['compare']} "
+                         f"| {'yes' if x['in_lists_official'] else 'no'} | {x['blackarch_dependents']} "
+                         f"| {esc(x['action'])} |")
+        L.append("")
+        if lim and len(in_arch) > lim:
+            L += [f"_… {len(in_arch) - lim} more in report.json_", ""]
 
         L += [f"## ✅ Updated ({len(ok)})", ""]
         if ok:

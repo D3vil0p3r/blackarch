@@ -126,6 +126,17 @@ jobs:
             --exclude .github/ci/exclude.txt --exclude lists/to-remove \
             --overrides .github/ci/nvchecker-overrides.toml
 
+      - name: List Arch Linux official packages
+        run: |
+          # "repo name version" for core/extra/multilib (not the AUR, not testing);
+          # the report flags BlackArch packages that duplicate one of them
+          out=.ci-state/state/arch-official.txt; : > "$out"
+          for repo in core extra multilib; do
+            pacman -Sl "$repo" >> "$out" 2>/dev/null || echo "::warning::repository $repo not available"
+          done
+          cp lists/official .ci-state/state/lists-official.txt 2>/dev/null || : > .ci-state/state/lists-official.txt
+          echo "official packages listed: $(wc -l < "$out")"
+
       - name: Check upstream versions (nvchecker)
         env:
           GH_TOKEN: ${{ github.token }}
