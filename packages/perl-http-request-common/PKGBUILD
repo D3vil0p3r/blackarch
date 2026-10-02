@@ -3,15 +3,15 @@
 
 pkgname=perl-http-request-common
 _pkgname=HTTP-Message
-pkgver=6.32
-pkgrel=3
+pkgver=7.04
+pkgrel=1
 pkgdesc='Construct common HTTP::Request objects'
 arch=('any')
 license=('PerlArtistic' 'GPL')
 options=('!emptydirs')
 url='http://search.cpan.org/~gaas/HTTP-Message-6.06/lib/HTTP/Request/Common.pm'
 source=("http://search.cpan.org/CPAN/authors/id/O/OA/OALDERS/$_pkgname-$pkgver.tar.gz")
-sha512sums=('359a0d51e65d721d8167dea05d7aa9853d07eb4a4093735cf5f45814117070400cce93d60b08dcf92cfe0fbc98e7455e7facaecbfcaff44cc0e619fb621b3288')
+sha512sums=('36e0f2a3819bcba799fa3cd424266c5667af943adf6e3dae2bff0f6cdb3b63a9bda47ac627e1fe3f4da2adb8f9f090dd0a1c810ceb340e842221a07d18159f14')
 
 prepare() {
   cd "$_pkgname-$pkgver"
