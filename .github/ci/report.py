@@ -67,6 +67,13 @@ def vercmp(a: str, b: str) -> int:
     return rpm(ra, rb)
 
 
+def update_text(kind: str, cur: str, new: str) -> str:
+    """VCS updates are detected by upstream commit, not by version"""
+    if kind == "vcs":
+        return f"{cur} → upstream commit {new[:7]}"
+    return f"{cur} → {new}"
+
+
 def load(path, default):
     p = Path(path) if path else None
     return json.loads(p.read_text()) if p and p.exists() else default
@@ -142,7 +149,7 @@ def main() -> None:
     for r in results.values():
         if r["result"] in CATS:
             this_run.add(r["pkg"])
-            upd = "current PKGBUILD" if r["kind"] in ("test", "rebuild") else f'{r["cur"]} → {r["target"]}'
+            upd = "current PKGBUILD" if r["kind"] in ("test", "rebuild") else update_text(r["kind"], r["cur"], r["target"])
             lists[r["result"]].append({"pkg": r["pkg"], "found_by": "build " + r["kind"],
                                        "severity": "error", "detail": r["reason"], "update": upd,
                                        "since": today[:10], "log_tail": r.get("log_tail", "")})
@@ -150,7 +157,7 @@ def main() -> None:
         if c.get("result") in CATS:
             lists[c["result"]].append({"pkg": c["pkg"], "found_by": "update (earlier run)",
                                        "severity": "error", "detail": c.get("reason", ""),
-                                       "update": f'{c["cur"]} → {c["new"]}',
+                                       "update": update_text(c["kind"], c["cur"], c["new"]),
                                        "since": (c.get("date") or "")[:10], "log_tail": "",
                                        "run_url": c.get("run_url")})
     for p, b in known.items():

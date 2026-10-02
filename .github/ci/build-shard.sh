@@ -34,7 +34,11 @@ while read -r u; do
   pkg=$(jq -r .pkg <<<"$u"); kind=$(jq -r .kind <<<"$u")
   cur=$(jq -r .cur <<<"$u"); new=$(jq -r .new <<<"$u")
   mkdir -p "$results/$pkg"
-  echo "::group::$pkg ($kind: $cur -> $new)"
+  case $kind in
+    vcs)          echo "::group::$pkg (vcs: $cur, upstream now at commit ${new:0:7})" ;;
+    test|rebuild) echo "::group::$pkg ($kind: $cur)" ;;
+    *)            echo "::group::$pkg ($kind: $cur -> $new)" ;;
+  esac
 
   if (( $(date +%s) - t0 > BUDGET_SECS )); then
     write_status "$pkg" "$kind" "$cur" "$new" skipped "shard time budget exhausted; retried next run"
