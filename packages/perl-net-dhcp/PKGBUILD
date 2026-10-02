@@ -3,8 +3,8 @@
 
 pkgname=perl-net-dhcp
 _pkgname=Net-DHCP
-pkgver=0.7_007
-pkgrel=13
+pkgver=0.9
+pkgrel=1
 epoch=1
 pkgdesc='Object methods to create a DHCP packet.'
 arch=('any')
@@ -13,7 +13,7 @@ license=('PerlArtistic' 'GPL')
 options=('!emptydirs')
 depends=('perl-module-build')
 source=("http://search.cpan.org/CPAN/authors/id/D/DJ/DJZORT/$_pkgname-$pkgver.tar.gz")
-sha512sums=('87aa497a910a9d31ac5a0a783ed79b1c941074a640dea808d3fcd8af436f10a7ef011c754e806313f9ca8e20e91ab76307eb1ba980fd261d4ba6d6925ecf726f')
+sha512sums=('7986f33b4aeb6199dfa7c72573d9373faaae189718526c3d5b342830e787e00e0fffb05be38176c5c910eda6968ff5c8ad3b40ecb41a3d16795db33dd2a5cbb1')
 
 prepare() {
   cd "$_pkgname-$pkgver"
