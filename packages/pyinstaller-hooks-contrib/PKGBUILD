@@ -3,7 +3,7 @@
 
 pkgname=pyinstaller-hooks-contrib
 _pkgname=pyinstaller_hooks_contrib
-pkgver=2026.4
+pkgver=2026.8
 pkgrel=1
 pkgdesc='PyInstaller community hooks.'
 arch=('any')
@@ -13,7 +13,7 @@ license=('custom:mixed')
 depends=('python')
 makedepends=('python-build' 'python-installer' 'python-wheel' 'python-setuptools')
 source=("https://files.pythonhosted.org/packages/source/${_pkgname::1}/$_pkgname/$_pkgname-$pkgver.tar.gz")
-sha512sums=('5372d54942c4b0d8802380022a40744ebe4e9c777f350d4ca8c38fbab4d4cc932fcb7879062b06affc6c7ef04494cfa24b881fa9d0a225be081dde5400f84298')
+sha512sums=('62638d0fd7bc982230a73f8006a820738be655bd8eff33f56a717394e812bef0ab6c6d7057c76e4a9f85083828384378717b8d182a05a240afd9c9d1f2c6810c')
 
 build() {
   cd "$_pkgname-$pkgver"
