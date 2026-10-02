@@ -3,7 +3,7 @@
 
 pkgname=python-pyghidra
 _pkgname=${pkgname#python-}
-pkgver=3.0.2
+pkgver=3.1.0
 pkgrel=1
 pkgdesc='Python library that provides direct access to the Ghidra API.'
 arch=('any')
@@ -13,7 +13,7 @@ depends=('python-jpype1' 'python-packaging')
 makedepends=('python-build' 'python-wheel' 'python-installer' 'python-setuptools')
 options=(!emptydirs)
 source=("https://files.pythonhosted.org/packages/source/${_pkgname::1}/$_pkgname/$_pkgname-$pkgver.tar.gz")
-sha512sums=('b81fd1fa559443c84426dc3b8644004b521d57e55362e91fd6d8309f1f157da4b2a8d4b5b45bc34c590b88a8f62bf0dd6980cc7c07f4e786557a283bc4bc4c8a')
+sha512sums=('e10b25eefb79c64bf240f123e133eabc946b8108c926660087c61dfbc772d7266e6bae7b61687d0b6c685c423d6921aee05b4963ce1e9b7d56519c8465ac7b41')
 
 build() {
   cd "$_pkgname-$pkgver"
