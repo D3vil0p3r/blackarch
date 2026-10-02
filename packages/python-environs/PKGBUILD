@@ -3,7 +3,7 @@
 
 pkgname=python-environs
 _pkgname=environs
-pkgver=14.6.0
+pkgver=15.2.0
 pkgrel=1
 pkgdesc='Simplified environment variable parsing.'
 arch=('any')
@@ -12,7 +12,7 @@ license=('MIT')
 depends=('python' 'python-marshmallow' 'python-dotenv')
 makedepends=('python-build' 'python-pip')
 source=("https://files.pythonhosted.org/packages/source/${_pkgname::1}/$_pkgname/$_pkgname-$pkgver.tar.gz")
-sha512sums=('740b8182d7c8807ea3f50db05b71d19b2b06486909c80fa2269bf2beefe8d1624d8994ad0137bd33118825376d65d2fd94d2cf8c3c7d8cdea307e1c43880b928')
+sha512sums=('726717cfe82f3b8951604748672dc777bd6201455eb7ae2c50bcfab418629ea0d5177a8c465bf9266072dff4eee8e29cf6cb4277fbe13f20531c77d735d09a92')
 
 build() {
   cd "$_pkgname-$pkgver"
