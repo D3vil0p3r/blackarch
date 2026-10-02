@@ -20,8 +20,6 @@ env:
   HEAD_SHA: ${{ github.event.pull_request.head.sha }} 
 jobs:
   pkgcheck:
-    # auto-update PRs are already built and install-tested by auto-update.yml
-    if: ${{ !startsWith(github.head_ref, 'auto-update/') }}
     runs-on: ubuntu-latest
     container:
       image: blackarchlinux/blackarch:latest
@@ -50,6 +48,7 @@ jobs:
               fi
            done
   build:
+     # auto-update PRs are already built and install-tested by auto-update.yml
      if: ${{ !startsWith(github.head_ref, 'auto-update/') }}
      runs-on: ubuntu-latest
      steps:

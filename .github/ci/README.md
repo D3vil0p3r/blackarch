@@ -84,15 +84,25 @@ image itself and the run continues with a warning.
 
 ## Relation to tests.yml
 
-`tests.yml` (pkgcheck + Docker build of the PKGBUILDs changed in a PR) is left
-untouched and still guards human PRs. The bot's commits carry `[skip ci]`, so
-it doesn't run on them; instead this pipeline does the same checks itself,
-for the whole tree:
+`tests.yml` (pkgcheck + Docker build of the PKGBUILDs changed in a PR) still
+guards human PRs unchanged. For the bot:
+
+* **push mode:** the bot's commits carry `[skip ci]`, so `tests.yml` doesn't run.
+* **pr mode:** `pkgcheck` runs on the bot's PR as on any other, so reviewers see
+  style problems in the PKGBUILDs it touches and can fix them in the PR (a
+  package edited in the PR is not uploaded on merge but added to
+  `lists/to-release`). The PR goes red if any of its PKGBUILDs already had a
+  pkgcheck error. `build` is skipped for `auto-update/*` branches (patch in
+  `tests-yml-skip-auto-update.patch`): those packages were already built and
+  install-tested, and building a large batch one after another would exceed
+  the 6-hour job limit.
+
+This pipeline also runs the same checks itself, for the whole tree:
 
 * `pkgcheck-all.sh` runs the same `pkgcheck` (pkgcheck-arch) on **every**
   PKGBUILD each day (results under "invalid PKGBUILD structure").
 * every update is built in a fresh container like `travis/Dockerfile`
-  does, **plus** an install test with `pacman -U`.
+  does, **plus** an install test with `pacman -U` on a second fresh system.
 
 ## Whole-repo build status (rolling audit)
 

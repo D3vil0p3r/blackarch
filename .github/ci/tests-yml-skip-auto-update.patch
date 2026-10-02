@@ -1,15 +1,6 @@
 --- a/.github/workflows/tests.yml	2026-10-01 15:59:47.842224819 +0000
-+++ b/.github/workflows/tests.yml	2026-10-02 07:00:00.187857783 +0000
-@@ -20,6 +20,8 @@
-   HEAD_SHA: ${{ github.event.pull_request.head.sha }} 
- jobs:
-   pkgcheck:
-+    # auto-update PRs are already built and install-tested by auto-update.yml
-+    if: ${{ !startsWith(github.head_ref, 'auto-update/') }}
-     runs-on: ubuntu-latest
-     container:
-       image: blackarchlinux/blackarch:latest
-@@ -27,7 +29,7 @@
++++ b/.github/workflows/tests.yml	2026-10-02 08:43:44.021283498 +0000
+@@ -27,7 +27,7 @@
        - name: Install dependencies
          run: |
            pacman -Syu --noconfirm --needed git pkgcheck-arch nodejs # 'node' needed to test workflow locally by act
@@ -18,10 +9,11 @@
          with:
            ref: ${{ env.HEAD_REF }}
            repository: ${{ env.HEAD_REPO }}
-@@ -48,9 +50,10 @@
+@@ -48,9 +48,11 @@
                fi
             done
    build:
++     # auto-update PRs are already built and install-tested by auto-update.yml
 +     if: ${{ !startsWith(github.head_ref, 'auto-update/') }}
       runs-on: ubuntu-latest
       steps:
