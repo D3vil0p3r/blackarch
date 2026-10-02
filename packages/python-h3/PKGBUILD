@@ -3,7 +3,7 @@
 
 pkgname=python-h3
 _pkgname=${pkgname#python-}
-pkgver=4.4.2
+pkgver=4.5.0
 pkgrel=1
 pkgdesc='Python bindings for H3, a hierarchical hexagonal geospatial indexing system.'
 arch=('x86_64' 'aarch64')
@@ -14,7 +14,7 @@ makedepends=('python-build' 'python-installer' 'python-setuptools' 'cython'
              'python-wheel' 'python-scikit-build-core' 'git')
 options=(!emptydirs)
 source=("https://files.pythonhosted.org/packages/source/${_pkgname::1}/$_pkgname/$_pkgname-$pkgver.tar.gz")
-sha512sums=('13e0320a6b2862c4e65990ccaf7b09a152d6b15631ca651bac6714b82110c57f40d88b81fa75aacc809b9e1cb5ffe5b3be05f9dfb67c419582d81e2f1ad78804')
+sha512sums=('82cab8a03f9ede59b86808abc04202c5df27389fd44d5dcb506e5871cc9f540ad397682ae60683473380d8852651b518f8585cb6c7f9dff400dabe4aa0776aa2')
 
 build() {
   cd "$_pkgname-$pkgver"
