@@ -3,7 +3,7 @@
 
 pkgname=python-pkg-about
 _pkgname=pkg_about
-pkgver=2.2.0
+pkgver=2.4.4
 pkgrel=1
 pkgdesc='Share Python package metadata at runtime.'
 arch=('any')
@@ -13,7 +13,7 @@ depends=('python' 'python-packaging' 'python-tox')
 makedepends=('python-build' 'python-pip')
 options=(!emptydirs)
 source=("https://files.pythonhosted.org/packages/source/${_pkgname::1}/$_pkgname/$_pkgname-$pkgver.tar.gz")
-sha512sums=('390929ffa021bd8ed5337343259c29fb0e096cf49ec5eb460b2137b06e5e86c919e44dd656c5785dc7afd3fa4b3880059eb3ce6d8093f4fd187c8f71145e0201')
+sha512sums=('e4a2d6ff343a8d31f25999705e51c6ccb18bf69de657c8520fb222c71771a3702fd7a28aab2e1fe8ee7b8af05bc597df7d336370df35d561fc1272c792291083')
 
 build() {
   cd "$_pkgname-$pkgver"
