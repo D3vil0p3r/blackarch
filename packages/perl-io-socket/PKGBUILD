@@ -3,8 +3,8 @@
 # Originally from the AUR.
 
 pkgname=perl-io-socket
-pkgver=1.45
-pkgrel=5
+pkgver=1.55
+pkgrel=1
 pkgdesc='Object interface to socket communications.'
 arch=('x86_64' 'aarch64')
 license=('PerlArtistic' 'GPL')
@@ -12,7 +12,7 @@ options=('!emptydirs')
 depends=('perl>=0')
 url='http://search.cpan.org/~gbarr/IO-1.25/lib/IO/Socket.pm'
 source=("http://search.cpan.org/CPAN/authors/id/T/TO/TODDR/IO-$pkgver.tar.gz")
-sha512sums=('886b11c1674dc9d4b7afe5af4ace12d1a6cc1372aaedba464f5494c80611d127213545e3cb696892ca9b47a5d4249d6ea5fc7ad809c2e37c9c1139464baaa739')
+sha512sums=('e52fc6e06400e3fb54e0017d25bdbd6a67b8a39a1f326af86af914623901f3e3629f9b51bf3e8a3619cf087cdecbf9cf4bf72b1f790b4f8df78ed86eadacd6a2')
 
 build() {
   cd "IO-$pkgver"
