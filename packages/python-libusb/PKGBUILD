@@ -3,7 +3,7 @@
 
 pkgname=python-libusb
 _pkgname=${pkgname#python-}
-pkgver=1.0.29.post7
+pkgver=1.0.30
 pkgrel=1
 pkgdesc='Python binding for the libusb C library.'
 arch=('any')
@@ -14,7 +14,7 @@ makedepends=('python-build' 'python-installer' 'python-setuptools'
              'python-wheel')
 options=(!emptydirs)
 source=("https://files.pythonhosted.org/packages/source/${_pkgname::1}/$_pkgname/$_pkgname-$pkgver.tar.gz")
-sha512sums=('046a807e4238959ba4b4fbba9bf059750e50f16abde4c47ec248ee8c385bd3f58f2ef979c5aaaeab56a6bcaef13436b07501cb0521184f22f4d26b675ecedd96')
+sha512sums=('383ee821a8a44f064667aa7d09fc70cc694fb65dfcddf1c8082b75ca0a6481d52468e1b56a62f66755e7cad5db67f5596f50f0282bcb979c7bbf64ab50bcf6a1')
 
 build() {
   cd "$_pkgname-$pkgver"
