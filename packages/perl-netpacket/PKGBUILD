@@ -3,8 +3,8 @@
 
 pkgname=perl-netpacket
 _pkgname=NetPacket
-pkgver=1.7.2
-pkgrel=6
+pkgver=1.8.0
+pkgrel=1
 pkgdesc='Assemble/disassemble network packets at the protocol level.'
 arch=('any')
 url='http://search.cpan.org/dist/NetPacket/'
@@ -17,7 +17,7 @@ provides=('perl-netpacket-arp=0.43.1' 'perl-netpacket-ethernet=0.43.1'
           'perl-netpacket-tcp=0.43.1' 'perl-netpacket-udp=0.43.1')
 options=(!emptydirs)
 source=("http://search.cpan.org/CPAN/authors/id/Y/YA/YANICK/$_pkgname-$pkgver.tar.gz")
-sha512sums=('94fb9b99f8d5443cce76c943ab562b44ee07448b0fbdd86bea35e0dc1aeabbce3871d7115f68c8ca013ad71390c51f2d5233a8f4ad71d796920c3f286cecf4c5')
+sha512sums=('f2c5f1f94d8e3a4c61ac44f63812e0a131f0fa0d59bebe196a84b431e4b2aa8ece2a56f0dc355b2e23ac6eeff99b55d224f513cffa143cadedd83a30146d7228')
 
 build() {
   cd "$_pkgname-$pkgver"
