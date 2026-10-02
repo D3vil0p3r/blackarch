@@ -92,10 +92,12 @@ guards human PRs unchanged. For the bot:
   style problems in the PKGBUILDs it touches and can fix them in the PR (a
   package edited in the PR is not uploaded on merge but added to
   `lists/to-release`). The PR goes red if any of its PKGBUILDs already had a
-  pkgcheck error. `build` is skipped for `auto-update/*` branches (patch in
-  `tests-yml-skip-auto-update.patch`): those packages were already built and
+  pkgcheck error. `build` is skipped for `auto-update/*` branches: those packages were already built and
   install-tested, and building a large batch one after another would exceed
   the 6-hour job limit.
+* In both `tests.yml` jobs every changed PKGBUILD is checked or built, even
+  after one fails; the job fails at the end and lists all failing packages
+  (`pkgcheck` runs 4 files at a time; builds stay one after another).
 
 This pipeline also runs the same checks itself, for the whole tree:
 
@@ -179,11 +181,10 @@ A dry run of the static checks on today's tree already finds real bugs, e.g.
 
 ## Setup
 
-1. Copy into the repo: `.github/ci/`, `.github/workflows/auto-update.yml`,
-   `.github/workflows/auto-update-release.yml` (PR mode), and apply the two
-   small patches: `barelease-lock.patch` (barelease only releases a lock it
-   took) and `tests-yml-skip-auto-update.patch` (tests.yml skips the bot's
-   already-tested PRs). The bundle also contains both files already patched.
+1. Copy into the repo: `.github/ci/`, the three workflows in
+   `.github/workflows/` (`auto-update.yml`, `auto-update-release.yml`, and the
+   updated `tests.yml`) and `scripts/barelease` (it now only releases a repo
+   lock it actually took).
 2. **Signing key.** Create a dedicated signing key (e.g. "BlackArch CI"),
    sign it with the master key and **add it to `blackarch-keyring`** —
    otherwise users' pacman rejects every package it signs. Never put a
