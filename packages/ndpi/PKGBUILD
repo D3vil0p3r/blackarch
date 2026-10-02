@@ -3,7 +3,7 @@
 
 pkgname=ndpi
 _name=nDPI
-pkgver=4.14
+pkgver=6.0
 pkgrel=1
 epoch=1
 pkgdesc='Open and Extensible GPLv3 Deep Packet Inspection Library.'
@@ -13,7 +13,7 @@ depends=('libpcap')
 makedepends=('json-c' 'libmaxminddb' 'libpcap' 'numactl' 'pcre2' 'rrdtool')
 license=('GPL-3.0-or-later')
 source=("https://github.com/ntop/$_name/archive/$pkgver.tar.gz")
-sha512sums=('f7e24289aa04e19bc357c29ba00ca7d27aefcd2faf51ddf2f526b4c4d4fefd0ded33dd8e60245c0d8772b3a870304d3dda2c40f3d5ee4382342889741f122146')
+sha512sums=('a404930ecafecd1990f07b01c3b66f7fd5d61df7c7b4e0b5d20fd0ed6ccfeec216438b66a1d3a58df6b16bbad1038a1162023a0e92c30d3b441950e75eb1447a')
 
 build() {
   cd "$_name-$pkgver"
