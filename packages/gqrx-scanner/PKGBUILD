@@ -6,7 +6,7 @@
 # Old Maintainer: Misaka13514 <Misaka13514 at gmail dot com>
 
 pkgname=gqrx-scanner
-pkgver=1.0.5
+pkgver=1.1.0
 pkgrel=1
 pkgdesc='A frequency scanner for Gqrx Software Defined Radio receiver.'
 arch=('x86_64' 'aarch64')
@@ -17,7 +17,7 @@ depends=('glibc')
 makedepends=('cmake')
 optdepends=('gqrx: Software Defined Radio receiver')
 source=("https://github.com/neural75/gqrx-scanner/archive/v$pkgver.tar.gz")
-sha512sums=('028bc0161abca2419bae6a03da32251d4826b65dc0afcd6daa7483f3d7563251c8fbe18f00b7a3f9adcc16745bad1b825f2afffe6f8aefa9acb1b47bdd9e7c4e')
+sha512sums=('ce0801456a84171a1a72db8614f7729db397956bc737b80658c557425df48c9d283bd8eca8f6cd677f700f2c50c50178958133fed6519311b9ab4cdabe2577de')
 
 build() {
   cmake -B build -S "${pkgname}-${pkgver}" \
