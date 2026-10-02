@@ -6,8 +6,8 @@
 
 pkgname=perl-struct-dumb
 _pkgname=Struct-Dumb
-pkgver=0.12
-pkgrel=6
+pkgver=0.16
+pkgrel=1
 pkgdesc='Make simple lightweight record-like structures.'
 arch=('any')
 url='http://search.cpan.org/dist/Struct-Dumb'
@@ -16,7 +16,7 @@ depends=('perl')
 makedepends=('perl-module-build')
 options=('!emptydirs')
 source=("http://search.cpan.org/CPAN/authors/id/P/PE/PEVANS/$_pkgname-$pkgver.tar.gz")
-sha512sums=('52b8e2e7b0f073d1e24c941529989f1bd94d29e8c84abfc811baf3955bba5951b235128953260a149e9e52ee31c0759498cc9c3a283e350e618e8b004e50a132')
+sha512sums=('62ee848012c036c0d77f2ac152576600b84ea88b50080423134530405125ec6ebb2979e7412cdd3d73f6a1f6e00a3becbdb74611242b1ac785cddb568c86d825')
 
 build() {
   cd "$_pkgname-$pkgver"
