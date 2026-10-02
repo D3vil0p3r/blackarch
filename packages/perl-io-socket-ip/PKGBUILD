@@ -4,8 +4,8 @@
 
 pkgname=perl-io-socket-ip
 _pkgname=IO-Socket-IP
-pkgver=0.41
-pkgrel=5
+pkgver=0.44
+pkgrel=1
 pkgdesc='Family-neutral IP socket supporting both IPv4 and IPv6.'
 arch=('any')
 license=('PerlArtistic' 'GPL')
@@ -14,7 +14,7 @@ depends=('perl>=0')
 makedepends=('perl-module-build')
 url='http://search.cpan.org/dist/IO-Socket-IP'
 source=("http://search.cpan.org/CPAN/authors/id/P/PE/PEVANS/$_pkgname-$pkgver.tar.gz")
-sha512sums=('f9fed6684ccaae3dcc1429d61211a24c2714af390b04a29e5a1362cfd470efc79305d3cb927d4caeb9e85302f248b2989e18332f8bef8022b427a49807f493fd')
+sha512sums=('257a299bc705b26651a5b4bf6ca605b8c3b6598fa377095b042c8bbc0d6ef87003aa8c87a672652e6f8b6b564e2e462243a3c304f717211576709050ef711527')
 
 build() {
   cd "$_pkgname-$pkgver"
