@@ -3,7 +3,7 @@
 
 pkgname=python-pgcli
 _pkgname=${pkgname#python-}
-pkgver=4.4.0
+pkgver=4.7.1
 pkgrel=1
 pkgdesc='CLI for Postgres Database. With auto-completion and syntax highlighting.'
 arch=('any')
@@ -16,7 +16,7 @@ makedepends=('python-build' 'python-installer' 'python-setuptools'
              'python-wheel' 'python-setuptools-scm')
 options=(!emptydirs)
 source=("https://files.pythonhosted.org/packages/source/${_pkgname::1}/$_pkgname/$_pkgname-$pkgver.tar.gz")
-sha512sums=('92020513cc2b90c24cd68312fbc45689b463caf5ab27eec1ce368ab152dfcb45ad108e26f5e2a09123d9af6695e0893cd278db5e4caa00f328575dc771ca2b7d')
+sha512sums=('7c7fd5c94b71bcd010e24f44222779633e602c322234015f2096aea62ab221582be6d637d36977112e088a794ab3544e8e5bb902a442551f9639cd017c089745')
 
 build() {
   cd "$_pkgname-$pkgver"
