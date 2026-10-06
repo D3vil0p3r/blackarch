@@ -14,10 +14,15 @@ on:
       - synchronize
       - ready_for_review
       - converted_to_draft
+
+permissions:
+  contents: read
+
 env:
-  HEAD_REF: ${{ github.event.pull_request.head.ref }}             # <branch> (e.g., patch-1)
-  HEAD_REPO: ${{ github.event.pull_request.head.repo.full_name }} # <user>/blackarch
-  HEAD_SHA: ${{ github.event.pull_request.head.sha }} 
+  HEAD_REPO: ${{ github.event.pull_request.head.repo.full_name }} # <user>/blackarch (empty on push)
+  HEAD_SHA: ${{ github.event.pull_request.head.sha }}             # exact PR commit (empty on push)
+  BEFORE_SHA: ${{ github.event.before }}                          # previous master tip (push only)
+
 jobs:
   pkgcheck:
     runs-on: ubuntu-latest
@@ -29,27 +34,33 @@ jobs:
           pacman -Syu --noconfirm --needed git pkgcheck-arch nodejs # 'node' needed to test workflow locally by act
       - uses: actions/checkout@v7
         with:
-          ref: ${{ env.HEAD_REF }}
-          repository: ${{ env.HEAD_REPO }}
+          ref: ${{ env.HEAD_SHA || github.sha }}
+          repository: ${{ env.HEAD_REPO || github.repository }}
           fetch-depth: 0
-      - name: Set up remotes and tags
+          persist-credentials: false
+      - name: Set up remotes, tags and the range to check
         run: |
           git config --global --add safe.directory "$GITHUB_WORKSPACE"
           git remote add upstream "https://github.com/BlackArch/blackarch.git"
           git fetch --tags origin
           git fetch upstream master
+          if [ "$GITHUB_EVENT_NAME" = pull_request ]; then
+            range="upstream/master...$HEAD_SHA"
+          elif git cat-file -e "${BEFORE_SHA}^{commit}" 2>/dev/null; then
+            range="$BEFORE_SHA..$GITHUB_SHA"
+          else
+            range="$GITHUB_SHA~1..$GITHUB_SHA"
+          fi
+          echo "checking range: $range"
+          echo "RANGE=$range" >> "$GITHUB_ENV"
       - name: Check Styling
         shell: bash
         run: |
-          # Check every changed PKGBUILD, in parallel, and fail at the end if
-          # any has problems (so all of them are listed in one run).
           mapfile -t files < <(git diff --name-only --diff-filter=ACMRT \
-            "upstream/master...$HEAD_SHA" | grep -E '(^|/)PKGBUILD$' || true)
+            "$RANGE" | grep -E '(^|/)PKGBUILD$' || true)
           if (( ${#files[@]} == 0 )); then echo "no PKGBUILD changed"; exit 0; fi
           echo "checking ${#files[@]} PKGBUILD(s)"
 
-          # pkgcheck runs `pacman -Si base-devel` for every PKGBUILD line:
-          # answer it once from a cache
           shim=$(mktemp -d)
           real=$(command -v pacman)
           "$real" -Si base-devel > "$shim/base-devel.si" 2>/dev/null || true
@@ -58,7 +69,6 @@ jobs:
             "exec '$real' \"\$@\"" > "$shim/pacman"
           chmod +x "$shim/pacman"
 
-          # one file per pkgcheck call; each file's output is printed as one block
           rc=0
           printf '%s\0' "${files[@]}" | PATH="$shim:$PATH" xargs -0 -P "$(nproc)" -n 1 \
             sh -c 'out=$(pkgcheck "$1" 2>&1); r=$?
@@ -69,49 +79,62 @@ jobs:
             echo "::error::pkgcheck found problems, see the 'problems:' groups above"
             exit 1
           fi
+
   build:
-     # auto-update PRs are already built and install-tested by auto-update.yml
-     if: ${{ !startsWith(github.head_ref, 'auto-update/') }}
-     runs-on: ubuntu-latest
-     steps:
-       - uses: actions/checkout@v7
-         with:
-           ref: ${{ env.HEAD_REF }}
-           repository: ${{ env.HEAD_REPO }}
-           fetch-depth: 0
-       - name: Set up remotes and tags
-         run: |
-           git config --global --add safe.directory "$GITHUB_WORKSPACE"
-           git remote add upstream "https://github.com/BlackArch/blackarch.git"
-           git fetch --tags origin
-           git fetch upstream master           
-       - name: Build Package
-         shell: bash
-         run: |
-           # Build every changed package (one after another, as before) and
-           # fail at the end with the list of the ones that did not build.
-           mapfile -t files < <(git diff --name-only --diff-filter=ACMRT \
-             "upstream/master...$HEAD_SHA" | grep -E '(^|/)PKGBUILD$' || true)
-           if (( ${#files[@]} == 0 )); then echo "no PKGBUILD changed"; exit 0; fi
-           ok=() failed=()
-           for FILE in "${files[@]}"; do
-             dir=$(dirname "$FILE")
-             echo "::group::Building $dir"
-             if docker build --load -t builder -f travis/Dockerfile "$dir" && docker run --rm builder; then
-               ok+=("$dir")
-             else
-               failed+=("$dir")
-             fi
-             echo "::endgroup::"
-           done
-           {
-             echo "### Package builds"
-             echo
-             for d in "${ok[@]}"; do echo "- ✅ \`$d\`"; done
-             for d in "${failed[@]}"; do echo "- ❌ \`$d\`"; done
-           } >> "$GITHUB_STEP_SUMMARY"
-           echo "built: ${#ok[@]}  failed: ${#failed[@]}"
-           if (( ${#failed[@]} )); then
-             echo "::error::failed to build: ${failed[*]}"
-             exit 1
-           fi
+    # auto-update PRs are already built and install-tested by auto-update.yml;
+    # only skip branches of THIS repo (a fork can name its branch auto-update/x)
+    if: >-
+      github.event_name == 'push'
+      || !startsWith(github.head_ref, 'auto-update/')
+      || github.event.pull_request.head.repo.full_name != github.repository
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ env.HEAD_SHA || github.sha }}
+          repository: ${{ env.HEAD_REPO || github.repository }}
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Set up remotes, tags and the range to check
+        run: |
+          git config --global --add safe.directory "$GITHUB_WORKSPACE"
+          git remote add upstream "https://github.com/BlackArch/blackarch.git"
+          git fetch --tags origin
+          git fetch upstream master
+          if [ "$GITHUB_EVENT_NAME" = pull_request ]; then
+            range="upstream/master...$HEAD_SHA"
+          elif git cat-file -e "${BEFORE_SHA}^{commit}" 2>/dev/null; then
+            range="$BEFORE_SHA..$GITHUB_SHA"
+          else
+            range="$GITHUB_SHA~1..$GITHUB_SHA"
+          fi
+          echo "checking range: $range"
+          echo "RANGE=$range" >> "$GITHUB_ENV"
+      - name: Build Package
+        shell: bash
+        run: |
+          mapfile -t files < <(git diff --name-only --diff-filter=ACMRT \
+            "$RANGE" | grep -E '(^|/)PKGBUILD$' || true)
+          if (( ${#files[@]} == 0 )); then echo "no PKGBUILD changed"; exit 0; fi
+          ok=() failed=()
+          for FILE in "${files[@]}"; do
+            dir=$(dirname "$FILE")
+            echo "::group::Building $dir"
+            if docker build --load -t builder -f travis/Dockerfile "$dir" && docker run --rm builder; then
+              ok+=("$dir")
+            else
+              failed+=("$dir")
+            fi
+            echo "::endgroup::"
+          done
+          {
+            echo "### Package builds"
+            echo
+            for d in "${ok[@]}"; do echo "- ✅ \`$d\`"; done
+            for d in "${failed[@]}"; do echo "- ❌ \`$d\`"; done
+          } >> "$GITHUB_STEP_SUMMARY"
+          echo "built: ${#ok[@]}  failed: ${#failed[@]}"
+          if (( ${#failed[@]} )); then
+            echo "::error::failed to build: ${failed[*]}"
+            exit 1
+          fi
