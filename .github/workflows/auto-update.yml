@@ -1,4 +1,4 @@
-# Daily automated package updates for BlackArch.
+# Automated package updates for BlackArch.
 #
 #   detect   lint all PKGBUILDs, ask nvchecker for upstream versions, plan shards
 #   build    N parallel shards; every package is bumped, built and install-tested
@@ -11,8 +11,8 @@
 name: Auto-update packages
 
 on:
-  schedule:
-    - cron: '23 4 * * *'          # daily, off the top of the hour
+#  schedule:
+#    - cron: '23 4 * * *'          # daily, off the top of the hour
   workflow_dispatch:
     inputs:
       packages:
@@ -76,11 +76,8 @@ jobs:
       mode: ${{ steps.gate.outputs.mode }}
     steps:
       - name: Install tools
-        # python-packaging is an optional nvchecker dependency its pypi source needs
         run: pacman -Syu --noconfirm --needed --noprogressbar git jq python nvchecker python-packaging pkgcheck-arch
 
-      # the triggering branch: lets you test CI changes on a branch (publishing
-      # is only allowed from master, see the gate below)
       - uses: actions/checkout@v7
         with:
           persist-credentials: false
@@ -128,8 +125,6 @@ jobs:
 
       - name: List Arch Linux official packages
         run: |
-          # "repo name version" for core/extra/multilib (not the AUR, not testing);
-          # the report flags BlackArch packages that duplicate one of them
           out=.ci-state/state/arch-official.txt; : > "$out"
           for repo in core extra multilib; do
             pacman -Sl "$repo" >> "$out" 2>/dev/null || echo "::warning::repository $repo not available"
@@ -226,8 +221,6 @@ jobs:
           IN_PROBE: ${{ inputs.probe_sources }}
           IN_RETRY: ${{ inputs.retry_failed }}
         run: |
-          # what was asked for vs what the run actually used (variables fill in
-          # "default"/"auto"); shown at the top of the run summary
           esc() { printf '%s' "${1:--}" | sed 's/|/\\|/g'; }
           if [ "$GITHUB_EVENT_NAME" = workflow_dispatch ]; then
             started="manually by $GITHUB_ACTOR"; ask() { esc "$1"; }
@@ -269,11 +262,6 @@ jobs:
           include-hidden-files: true
           retention-days: 14
 
-  # ---------------------------------------------------------------------------
-  # Build the builder image once per run (runs alongside detect) and hand it to
-  # the shards as a short-lived artifact: one Docker Hub pull and one
-  # `pacman -Syu` per run instead of one per shard, every shard gets the same
-  # packages, and nothing is stored as a package on the repository.
   image:
     runs-on: ubuntu-latest
     timeout-minutes: 30
@@ -401,7 +389,7 @@ jobs:
       && fromJSON(needs.detect.outputs.updates || '0') > 0
     runs-on: ubuntu-latest
     container: blackarchlinux/blackarch:latest
-    environment: blackarch-repo      # put the secrets here; add reviewers if wanted
+    environment: blackarch-repo
     timeout-minutes: 120
     permissions:
       contents: write
