@@ -118,8 +118,8 @@ jobs:
         run: |
           useradd -m ci                       # makepkg refuses to run as root
           mkdir -p .ci-state/state && chown -R ci: .ci-state packages
-          runuser -u ci -- .github/ci/meta-all.sh packages .ci-state/meta.txt
-          .github/ci/pkgcheck-all.sh packages .ci-state/state/pkgcheck.out
+          runuser -u ci -- bash .github/ci/meta-all.sh packages .ci-state/meta.txt
+          bash .github/ci/pkgcheck-all.sh packages .ci-state/state/pkgcheck.out
           python3 .github/ci/detect.py scan \
             --meta .ci-state/meta.txt --out .ci-state/state \
             --packages packages --pkgcheck .ci-state/state/pkgcheck.out \
@@ -361,7 +361,7 @@ jobs:
           JOB_START: ${{ steps.start.outputs.t }}
           JOB_TIMEOUT_MIN: '340'        # keep equal to this job's timeout-minutes
         run: |
-          .github/ci/build-shard.sh ".ci-state/state/shards/${{ matrix.shard }}.json" \
+          bash .github/ci/build-shard.sh ".ci-state/state/shards/${{ matrix.shard }}.json" \
             packages out/results out/pkgs .ci-state/state/meta.json
 
       - uses: actions/upload-artifact@v7
@@ -449,7 +449,7 @@ jobs:
           SSH_KNOWN_HOSTS: ${{ vars.REPO_SSH_KNOWN_HOSTS }}
           SSH_USER: ${{ vars.REPO_SSH_USER }}
           REPO_SITEDIR: ${{ vars.REPO_SITEDIR }}
-        run: .github/ci/publish.sh
+        run: bash .github/ci/publish.sh
 
       - uses: actions/upload-artifact@v7
         if: always()

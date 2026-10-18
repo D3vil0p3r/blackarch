@@ -92,4 +92,4 @@ jobs:
           SSH_KNOWN_HOSTS: ${{ vars.REPO_SSH_KNOWN_HOSTS }}
           SSH_USER: ${{ vars.REPO_SSH_USER }}
           REPO_SITEDIR: ${{ vars.REPO_SITEDIR }}
-        run: .github/ci/release-merged.sh
+        run: bash .github/ci/release-merged.sh

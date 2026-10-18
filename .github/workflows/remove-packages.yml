@@ -32,7 +32,7 @@ jobs:
       - name: Read the package tree
         run: |
           mkdir -p .ci-state/state
-          .github/ci/meta-all.sh packages .ci-state/meta.txt
+          bash .github/ci/meta-all.sh packages .ci-state/meta.txt
           python3 .github/ci/detect.py scan --meta .ci-state/meta.txt --out .ci-state/state \
             --packages packages --exclude .github/ci/exclude.txt --exclude lists/to-remove \
             --overrides .github/ci/nvchecker-overrides.toml >/dev/null
@@ -48,4 +48,4 @@ jobs:
           RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
           GIT_USER_NAME: blackarch-ci[bot]
           GIT_USER_EMAIL: team@blackarch.org
-        run: .github/ci/remove-prepare.sh packages "$PACKAGES"
+        run: bash .github/ci/remove-prepare.sh packages "$PACKAGES"
