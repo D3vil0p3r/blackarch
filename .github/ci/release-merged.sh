@@ -46,7 +46,7 @@ mapfile -t changed < <(
 ship=() manual=()
 for pkg in "${changed[@]}"; do
   if [[ -f packages/$pkg/PKGBUILD && -f $RESULTS/$pkg/PKGBUILD ]] &&
-     cmp -s "packages/$pkg/PKGBUILD" "$RESULTS/$pkg/PKGBUILD" &&
+     git diff --no-index --quiet "packages/$pkg/PKGBUILD" "$RESULTS/$pkg/PKGBUILD" &&
      compgen -G "$PKGS/$pkg/*.pkg.tar.zst" >/dev/null; then
     ship+=("$pkg")
   elif [[ -f packages/$pkg/PKGBUILD ]]; then
