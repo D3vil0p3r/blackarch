@@ -3,7 +3,7 @@
 #
 #   /build   writable copy of packages/<pkg>/   (cwd)
 #   /out     results: status.json, build.log, PKGBUILD, pkgs/*.pkg.tar.zst
-#   env      PKG KIND(release|vcs|rebuild|test) CUR NEW
+#   env      PKG KIND(release|vcs|rebuild|test|ship) CUR NEW
 #
 # Phases: bump -> verify sources -> build (makepkg -s).
 # Upstream code runs here, so NOTHING this container writes is trusted: the
@@ -89,8 +89,8 @@ case $KIND in
     [[ $newver != "$CUR" ]] || status no_change "pkgver() still returns $CUR"
     sed -i -E "s|^pkgrel=.*|pkgrel=1|" PKGBUILD
     ;;
-  test)
-    ;;  # rolling audit: build the PKGBUILD exactly as it is on master
+  test|ship)
+    ;;  # rolling audit / ship: build the PKGBUILD exactly as it is on master
   rebuild)
     rel=$(sed -nE "s/^pkgrel=[\"']?([0-9]+)[\"']?\s*$/\1/p" PKGBUILD)
     [[ $rel =~ ^[0-9]+$ ]] || status pkgbuild_invalid "cannot bump non-integer pkgrel for a rebuild"
