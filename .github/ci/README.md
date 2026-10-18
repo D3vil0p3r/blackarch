@@ -227,6 +227,21 @@ and nothing is committed or released. The report still runs.
 The first run will find many VCS packages behind; `max_updates` (default 250)
 caps each run and the rest is picked up the following days.
 
+## Removing packages
+
+**Actions → Remove packages → Run workflow**, with one or more package
+directory names. The run deletes their sources on a branch
+`remove/<date>-<run>` and opens one PR, whose description lists every package
+name that will disappear from the repository (all outputs of a split
+PKGBUILD) and warns if other packages in the tree still depend on them.
+Nothing happens to the repository until the PR is **merged**; closing it
+without merging does nothing. On merge, the release workflow removes the
+entries from the repository database on both architectures with `scripts/barelease --remove`, verifies the
+databases and comments on the PR. Package files stay on the server for
+`scripts/baclean`, as with a manual `--remove`. The names are also dropped from
+`lists/to-release`, `lists/broken`, `lists/to-remove` and `lists/python2-tools`
+in the same PR.
+
 ## Manual runs (Actions → Auto-update packages → Run workflow)
 
 The run summary opens with a **Run settings** table: what was

@@ -23,6 +23,22 @@ git config user.email "team@blackarch.org"
 git fetch -q origin master
 git checkout -q -B master origin/master
 
+# ---- a merged remove/* PR: remove the listed packages from the repo
+if [[ ${HEAD_REF:-} == remove/* ]]; then
+  names=$(printf '%s\n' "${PR_BODY:-}" | sed -nE 's/.*<!-- remove-packages: ([^>]*) -->.*/\1/p' | head -n1)
+  names=$(printf '%s' "$names" | tr -cs 'A-Za-z0-9._+@-' ' ')
+  [[ -n $names ]] || { echo "no remove-packages marker in the PR body"; exit 1; }
+  rc=0
+  # shellcheck disable=SC2086
+  if release_setup && remove_packages $names; then
+    echo "✅ Removed from the package repository: $names" > "$comment"
+  else
+    rc=1; echo "⚠️ Could not remove from the package repository: ${release_error:-unknown error}. Packages: $names. Remove them manually with \`scripts/barelease --remove\`." > "$comment"
+  fi
+  gh pr comment "$PR_NUMBER" --body-file "$comment" || true
+  exit "$rc"
+fi
+
 mapfile -t changed < <(
   gh api --paginate "repos/$GH_REPO/pulls/$PR_NUMBER/files" -q '.[].filename' |
     sed -nE 's|^packages/([^/]+)/PKGBUILD$|\1|p' | sort -u)

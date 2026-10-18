@@ -145,6 +145,35 @@ release_upload() {
   return 1
 }
 
+# remove_packages <pkgname>...  barelease --remove each name (repo-remove on
+# the server for both arches), then verify the served database. Package files
+# are left on the server for scripts/baclean, as a manual --remove does.
+remove_packages() {
+  (( $# )) || return 0
+  local rc=0 n
+  if ! _wait_for_lock; then
+    _fail "repo lock still held after ${LOCK_WAIT_MIN:-60} min"; return 1
+  fi
+  for n in "$@"; do
+    timeout 30m ./scripts/barelease -w --remove -k "$GPG_KEY_ID" -u "$SSH_USER" -d "$REPO_SITEDIR" "$n" || rc=1
+  done
+  ssh-agent -k >/dev/null 2>&1
+  (( rc == 0 )) || { _fail "barelease --remove failed for at least one package"; return 1; }
+  local t arch still=()
+  t=$(mktemp -d)
+  for arch in x86_64 aarch64; do
+    rsync -q -e "ssh -o BatchMode=yes -l $SSH_USER" \
+      "$REPO_HOST:$REPO_SITEDIR/blackarch/blackarch/os/$arch/blackarch.db.tar.gz" "$t/$arch.db" ||
+      { rm -rf "$t"; _fail "cannot download the $arch database to verify the removal"; return 1; }
+    for n in "$@"; do
+      tar -tzf "$t/$arch.db" | sed 's|^\./||' | grep -qE "^$n-[^-]+-[^-]+/" && still+=("$arch/$n")
+    done
+  done
+  rm -rf "$t"
+  (( ${#still[@]} == 0 )) || { _fail "still in the repo database after removal: ${still[*]}"; return 1; }
+  released=true
+}
+
 release_packages() {
   (( $# )) || return 0
   if [[ ${RELEASE:-true} != true ]]; then
