@@ -2,7 +2,7 @@
 # See COPYING for license details.
 
 pkgname=whatweb
-pkgver=v0.6.3.r10.gc42e1b9
+pkgver=v0.6.4.r0.gd279d93
 pkgrel=1
 epoch=1
 groups=('blackarch' 'blackarch-recon' 'blackarch-webapp')

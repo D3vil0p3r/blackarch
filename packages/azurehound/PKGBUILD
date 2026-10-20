@@ -2,8 +2,9 @@
 # See COPYING for license details.
 
 pkgname=azurehound
-pkgver=2.11.0.r3.g1f7ef13
+pkgver=3.1.1.r5.gb54bdfe
 pkgrel=1
+epoch=3
 pkgdesc='Azure data exporter for BloodHound.'
 arch=('x86_64' 'aarch64')
 groups=('blackarch' 'blackarch-misc' 'blackarch-networking')

@@ -2,7 +2,8 @@
 # See COPYING for license details.
 
 pkgname=manspider
-pkgver=115.35ff13f
+_pkgname=man-spider
+pkgver=135.9547fbe
 pkgrel=1
 pkgdesc='Spider entire networks for juicy files sitting on SMB shares. Search filenames or file content - regex supported!'
 groups=('blackarch' 'blackarch-scanner' 'blackarch-recon')

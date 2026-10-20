@@ -2,7 +2,7 @@
 # See COPYING for license details.
 
 pkgname=sslyze
-pkgver=6.3.0
+pkgver=6.3.1
 _pyver=3.14
 pkgrel=1
 groups=('blackarch' 'blackarch-crypto' 'blackarch-scanner')
@@ -15,7 +15,7 @@ depends=('python' 'python-tls-parser' 'python-cryptography' 'python-nassl'
 makedepends=('python-build' 'python-installer' 'python-setuptools'
              'python-wheel')
 source=("https://github.com/nabla-c0d3/$pkgname/archive/$pkgver.zip")
-sha512sums=('1beec53cbc7aa4651a5e500eb62311be784a8e4c3dc02b0c0857c40805c1fcb4d3bb2821a62311086454319acf23c44b9baf31cb7ad83cb1adde7d1640403c1f')
+sha512sums=('66788adaaa1c283920f7ca54229b286d608c5dc859253573af7d025819f47bc29fe360e330b9a38cbd1e045bf89b9804023de2d31f036ed327be531b0d198906')
 
 prepare() {
   cd "$pkgname-$pkgver"

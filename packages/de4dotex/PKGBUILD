@@ -2,7 +2,7 @@
 # See COPYING for license details.
 
 pkgname=de4dotex
-pkgver=3.4.0.r4.gc21584f
+pkgver=3.10.0.r5.gb67f1d7
 pkgrel=1
 pkgdesc='.NET deobfuscator and unpacker.'
 arch=('any')

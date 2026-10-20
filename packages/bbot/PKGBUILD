@@ -2,9 +2,9 @@
 # See COPYING for license details.
 
 pkgname=bbot
-pkgver=7558.ec1acae
+pkgver=v3.0.2.r0.ga6fb827
 pkgrel=1
-epoch=2
+epoch=3
 pkgdesc='Multipurpose scanner built to automate your Recon, Bug Bounties, and ASM.'
 arch=('any')
 groups=('blackarch' 'blackarch-recon')

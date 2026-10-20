@@ -2,7 +2,7 @@
 # See COPYING for license details.
 
 pkgname=opendht-c
-pkgver=v3.7.7.r4.g86d5065a
+pkgver=v4.4.1.r0.g621b44c8
 pkgrel=1
 epoch=1
 pkgdesc='C++17 Distributed Hash Table implementation.'

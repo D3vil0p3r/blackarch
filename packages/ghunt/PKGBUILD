@@ -2,8 +2,8 @@
 # See COPYING for license details.
 
 pkgname=ghunt
-pkgver=v2.2.0.r28.ge8b0669
-pkgrel=2
+pkgver=v2.2.0.r30.g5ee8939
+pkgrel=1
 pkgdesc='An offensive OSINT Google framework.'
 arch=('any')
 groups=('blackarch' 'blackarch-recon')

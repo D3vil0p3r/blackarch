@@ -2,7 +2,7 @@
 # See COPYING for license details.
 
 pkgname=trufflehog
-pkgver=v3.94.1.r2.g6171fa9f6
+pkgver=v3.97.9.r22.g59e3b04e8
 pkgrel=1
 epoch=3
 pkgdesc='Searches through git repositories for high entropy strings, digging deep into commit history.'

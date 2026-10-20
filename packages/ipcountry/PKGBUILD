@@ -2,8 +2,8 @@
 # See COPYING for license details.
 
 pkgname=ipcountry
-pkgver=2.1
-pkgrel=2
+pkgver=2.3
+pkgrel=1
 groups=('blackarch' 'blackarch-misc')
 pkgdesc='Fetches IPv4 ranges of given country in host and cidr format.'
 url='https://nullsecurity.net/tools/misc.html'
@@ -11,7 +11,7 @@ license=('custom:unknown')
 arch=('any')
 depends=('python' 'python-requests')
 source=("https://github.com/nullsecuritynet/tools/raw/main/misc/$pkgname/release/$pkgname-$pkgver.tar.gz")
-sha512sums=('9a030f63a7fafa4001a29ddaebcf3d6fedd6de1f5303ac9b3dacff513e50195049ba1de5c60f6ac288ac4c2c889b9ab97a62d24e423fdb46dd2d33fb870e0a1e')
+sha512sums=('bdc81d3bcf529f00c1bab83349e356b9f0f1673b1e6c3ee2bb2d67ac8293d6699c7ef0ff79540217710572f8c5ab1da906e484443e28491c4902869a92e052d9')
 
 package() {
   cd "$pkgname-$pkgver"

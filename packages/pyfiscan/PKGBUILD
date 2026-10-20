@@ -2,8 +2,8 @@
 # See COPYING for license details.
 
 pkgname=pyfiscan
-pkgver=3002.bea806a
-pkgrel=2
+pkgver=3009.358d56a
+pkgrel=1
 groups=('blackarch' 'blackarch-webapp' 'blackarch-scanner')
 pkgdesc='Free web-application vulnerability and version scanner.'
 arch=('any')

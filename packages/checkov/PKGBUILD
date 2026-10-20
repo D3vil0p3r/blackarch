@@ -2,7 +2,7 @@
 # See COPYING for license details.
 
 pkgname=checkov
-pkgver=3.2.513.r1.g055f553ca
+pkgver=3.3.22.r0.g4ef6eb50e3
 pkgrel=1
 pkgdesc='Prevent cloud misconfigurations and find vulnerabilities during build-time in infrastructure as code, container images and open source packages.'
 groups=('blackarch' 'blackarch-code-audit')

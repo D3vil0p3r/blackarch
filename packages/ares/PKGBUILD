@@ -2,7 +2,7 @@
 # See COPYING for license details.
 
 pkgname=ares
-pkgver=0.11.0.r402.g15c3b1a
+pkgver=0.11.0.r545.gf2f7cb9
 pkgrel=1
 pkgdesc='Automated decoding of encrypted text without knowing the key or ciphers used.'
 arch=('x86_64' 'aarch64')

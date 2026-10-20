@@ -9,6 +9,11 @@ post_install() {
 }
 
 post_upgrade() {
+  rm -rf /usr/share/manspider/venv/venvs/man-spider
   post_install "$@"
+}
+
+post_remove() {
+  rm -rf /usr/share/manspider
 }
 

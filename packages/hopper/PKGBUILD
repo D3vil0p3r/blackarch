@@ -2,7 +2,7 @@
 # See COPYING for license details.
 
 pkgname=hopper
-pkgver=5.19.7
+pkgver=6.5.0
 pkgrel=1
 pkgdesc='Reverse engineering tool that lets you disassemble, decompile and debug your applications.'
 groups=('blackarch' 'blackarch-reversing' 'blackarch-disassembler'
@@ -12,9 +12,9 @@ url='https://www.hopperapp.com/download.html?'
 license=('custom:unknown')
 depends=('hicolor-icon-theme' 'libbsd' 'python2' 'qt5-base')
 DLAGENTS=("https::/usr/bin/curl -A Mozilla -fLC - --retry 3 --retry-delay 3 -o %o %u")
-source=("https://www.hopperapp.com/downloader/public/Hopper-v4-$pkgver-Linux-demo.pkg.tar.xz"
+source=("https://www.hopperapp.com/downloader/public/Hopper-$pkgver-Linux-demo.pkg.tar.xz"
         'LICENSE')
-sha512sums=('20e1916de2d7d913d328aa28ac09d95a237bf25ee39844514cfb82188318493b2b2d2d992c3aa5d1013d94b238a2e238df4df1e4b1be0ea8013af9f8f325062e'
+sha512sums=('e7fc1c610b1867931e3b6a24e7fb7bbe48094b2466ebbf59778180fa5019550db046e3b6842dcfa3d42987967b6e3c19232a24b5bca4e5e164752127e04d3996'
             '8f98f63fc100f23ddf8b0e9aef9b062552d39ed48174133eea52ac7fb7d66df0da1479e6b249bae748f34fc61ee49c6cf770b03714af7c6e4b6cabf2db71b1fe')
 
 package() {

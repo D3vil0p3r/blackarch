@@ -2,14 +2,14 @@
 # See COPYING for license details.
 
 pkgname=trid-defs
-pkgver=2026.02.27
+pkgver=2026.09.26
 pkgrel=1
 pkgdesc='Filesignature database for trid.'
 arch=('any')
 url='http://mark0.net/soft-trid-e.html'
 license=('custom:unknown')
 source=("$pkgname-$pkgver.zip::http://mark0.net/download/triddefs.zip")
-sha512sums=('fb4e97c0670ff1f8d5bb7c17954d49b061db4a9eba0ef22a272cf26c3a61ab0ebe4ff9c5d939b7369aeb5fe958071318955b250ec067bebecd703585ff7cec21')
+sha512sums=('190c0fb62e09e61429634ce013dbe5af0841db9f01c42127822559b15f191386e857f19e189767e6e36a86dbb7613e5370943a5293a6ee7094ae288f3d077adc')
 
 package() {
   install -D triddefs.trd "$pkgdir/usr/share/trid/triddefs.trd"

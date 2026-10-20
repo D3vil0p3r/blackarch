@@ -3,8 +3,8 @@
 
 pkgname=python-dissect.shellitem
 _pkgname=${pkgname#python-}
-pkgver=3.13.r0.g16bf53d
-pkgrel=3
+pkgver=3.13.r1.g454d8d6
+pkgrel=1
 pkgdesc='A Dissect module implementing a parser for the Shellitem structures, commonly used by Microsoft Windows.'
 arch=('any')
 url='https://github.com/fox-it/dissect.shellitem'

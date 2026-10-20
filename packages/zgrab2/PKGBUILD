@@ -2,7 +2,7 @@
 # See COPYING for license details.
 
 pkgname=zgrab2
-pkgver=v1.0.0.r21.gaf98222
+pkgver=v1.0.0.r82.ga123179
 pkgrel=1
 epoch=1
 pkgdesc='Fast Application Layer Scanner.'

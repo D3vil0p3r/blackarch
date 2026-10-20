@@ -12,12 +12,12 @@
 # Contributor: BrLi
 
 pkgname=tor-browser
-pkgver=15.0.8
+pkgver=15.0.24
 pkgrel=1
 pkgdesc='Tor Browser Bundle: anonymous browsing using Firefox and Tor.'
 groups=('blackarch' 'blackarch-defensive')
-url='https://www.torproject.org/projects/torbrowser.html'
-license=('BSD-3-Clause')
+url='https://download.torproject.org/tor-browser-for-desktop/'
+license=('MPL-2.0')
 depends=('libxt' 'startup-notification' 'mime-types' 'dbus-glib' 'alsa-lib'
          'desktop-file-utils' 'hicolor-icon-theme' 'libvpx' 'icu' 'libevent'
          'nss' 'hunspell' 'sqlite')
@@ -39,8 +39,8 @@ source=("$_urlbase/$pkgname-linux-$_archstr-$pkgver.tar.xz"
         "$pkgname.png"
         "$pkgname.svg")
 noextract=("$pkgname-linux-$_archstr-$pkgver.tar.xz")
-sha512sums=('893fa08975dc83124299c7051cfd6322974967af38f500e95447d4d7edad28f927efa960a7648f583dba94a238c7a81384f828b31cdf904401a13830ac9bfae4'
-            '909d72393acbfe1123ead9450e14bef35fb570e5488982e46632a21734990a2cffdcba74f6e0d62eac78aa183c5778b57951ccd1095e46b910cbd860277f0259'
+sha512sums=('b3bf208178505d7f0775306e1c21ee41aabdf6b91154ba2d2a19bf8d5351a07d40a3f31c71adc3433e6847f581bfaf09e412a96f47b0dae6320e242585979361'
+            '9f57329ee691eb24efb224b8f72bf0598ca427db288215db90462c986279cee36f048a5b5081cf3e6f4724675376d61bd469168b96ddf8adcaafd57322cb9ed6'
             '8c656941749238d1e4b0549cc0f2ca37c103a4e57422ac1f25ea147ab396b843c0613569ced0f3418ae9be5a8d5158d7d3da8be153a1da01f460625eced46e7e'
             'e334c1f226235c30011e62602ec0c0bd549bfe411e37125a5ee47f2a2d187045bc261efcaf2a9490d01dc687878ecfe01827996adc62e76df39ee8146d76713e'
             '662b800e849f2fa369496974d0e22c68cb5f5666cb8d3f768d236daae40c693880fb051f860aacf347a0fc8491764a315053dc9bbcc149f820267d1466bd995a')

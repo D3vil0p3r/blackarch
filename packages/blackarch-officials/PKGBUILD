@@ -2,7 +2,7 @@
 # See COPYING for license details.
 
 pkgname=blackarch-officials
-pkgver=20260402
+pkgver=20260910
 pkgrel=1
 pkgdesc='Meta package for installing official security tools from the Arch Linux repository.'
 arch=('x86_64' 'aarch64')
@@ -81,7 +81,6 @@ if [[ $CARCH == "x86_64" ]]; then
     'jadx'
     'jhead'
     'john'
-    'kcptun'
     'kismet'
     'libpst'
     'limesuite'
@@ -107,6 +106,7 @@ if [[ $CARCH == "x86_64" ]]; then
     'nmap'
     'onionshare'
     'open-iscsi'
+    'openscap'
     'p0f'
     'packer'
     'packeth'
@@ -129,7 +129,6 @@ if [[ $CARCH == "x86_64" ]]; then
     'radamsa'
     'radare2'
     'rarcrack'
-    'rathole'
     'reaver'
     'rfdump'
     'rizin'
@@ -161,7 +160,6 @@ if [[ $CARCH == "x86_64" ]]; then
     'sslscan'
     'strace'
     'stunnel'
-    'subbrute'
     'swaks'
     'sysdig'
     'tcpdump'
@@ -264,7 +262,6 @@ elif [[ $CARCH = "aarch64" ]]; then
     'jad'
     'jadx'
     'jhead'
-    'kcptun'
     'kismet'
     'libpst'
     'limesuite'
@@ -308,7 +305,6 @@ elif [[ $CARCH = "aarch64" ]]; then
     'qflipper'
     'radamsa'
     'radare2'
-    'rathole'
     'reaver'
     'rfdump'
     'rizin'
@@ -336,7 +332,6 @@ elif [[ $CARCH = "aarch64" ]]; then
     'sslscan'
     'strace'
     'stunnel'
-    'subbrute'
     'swaks'
     'tcpdump'
     'tcpflow'

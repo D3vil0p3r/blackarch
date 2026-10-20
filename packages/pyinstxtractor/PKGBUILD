@@ -2,8 +2,8 @@
 # See COPYING for license details.
 
 pkgname=pyinstxtractor
-pkgver=2025.02.r2.g3b38d8d
-pkgrel=3
+pkgver=2026.07.r0.g815d31c
+pkgrel=1
 pkgdesc='PyInstaller Extractor.'
 arch=('any')
 groups=('blackarch' 'blackarch-reversing')

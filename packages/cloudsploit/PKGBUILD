@@ -2,7 +2,7 @@
 # See COPYING for license details.
 
 pkgname=cloudsploit
-pkgver=6695.af8618a4f
+pkgver=6744.cf9cd42d1
 pkgrel=1
 pkgdesc='AWS security scanning checks.'
 arch=('any')
