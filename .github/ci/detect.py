@@ -349,7 +349,7 @@ def release_entry(url: str, ver: str) -> tuple[dict, str] | None:
         return {"source": "cpan", "cpan": fname.split(f"-{ver}.", 1)[0]}, "cpan"
 
     # SourceForge has no nvchecker source; scrape the project's file RSS feed
-    if host.endswith("sourceforge.net") and ver in fname and parts:
+    if host.endswith("sourceforge.net") and parts:   # /download URLs: fname is fixed below
         proj = None
         if host in ("downloads.sourceforge.net", "download.sourceforge.net"):
             if parts[0] in ("project", "sourceforge") and len(parts) >= 3:
@@ -442,10 +442,18 @@ def build_depgraph(meta: dict[str, dict]) -> dict[str, dict]:
     """
     owner: dict[str, str] = {}
     graph: dict[str, dict] = {}
+    # alias -> the outputs of the directory that provide it: a top-level
+    # provides=() applies to every split package, package_X() provides to X
+    alias_of: dict[str, dict[str, set[str]]] = {}
     for d, m in meta.items():
-        names = list(m["pkgname"])
-        prov = [dep_name(x) for x in m["provides"]]
-        prov += [dep_name(x.split(" ", 1)[1]) for x in m["sdep_provides"] if " " in x]
+        names = list(m["pkgname"]) or [d]
+        top = [dep_name(x) for x in m["provides"]]
+        alias_of[d] = {a: set(names) for a in top}
+        for x in m["sdep_provides"]:
+            if " " in x:
+                sub, dep = x.split(" ", 1)
+                alias_of[d].setdefault(dep_name(dep), set()).add(sub)
+        prov = list(alias_of[d])
         graph[d] = {"names": {n: [] for n in names}, "rdeps": []}
         for n in names + prov:
             owner.setdefault(n, d)
@@ -480,6 +488,10 @@ def build_depgraph(meta: dict[str, dict]) -> dict[str, dict]:
                 graph[x]["rdeps"].append(r)
                 if name in graph[x]["names"]:
                     graph[x]["names"][name].append(r)
+                else:   # asked for by a provided alias: credit the output(s) that provide it
+                    for o in alias_of[x].get(name, ()):
+                        if o in graph[x]["names"]:
+                            graph[x]["names"][o].append(r)
     return graph
 
 
@@ -705,8 +717,12 @@ def cmd_plan(a) -> None:
     shipped = 0
     if repo is not None:
         busy = {u["pkg"] for u in updates}
+        # scan's exclusions (exclude.txt, lists/to-remove, python2 pattern) apply
+        # here too: never re-add a package that is being removed. --force still wins.
+        excluded = {p for p, why in json.loads((st / "untracked.json").read_text()).items()
+                    if why.startswith("excluded")} if (st / "untracked.json").exists() else set()
         for d, m in sorted(meta.items()):
-            if d in busy or not buildable(m) or "fatal" in m or "syntax_error" in m \
+            if d in busy or d in excluded or not buildable(m) or "fatal" in m or "syntax_error" in m \
                     or not m.get("pkgver") or not m.get("pkgrel"):
                 continue
             rec = tracking.get(d, {})

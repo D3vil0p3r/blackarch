@@ -66,9 +66,20 @@ detect.py plan  shards               pacman -U install test             (sign + 
   `[skip ci]`. If the upload fails after the push, the packages are appended
   to `lists/to-release` so the normal release flow picks them up.
 
+Packages are signed by the CI itself and handed to `scripts/barelease -b`;
+after the upload the run downloads the database again (signature + entries)
+and checksums every uploaded package and signature on the server, since
+barelease ignores rsync errors. A stale `/tmp/blackarch.lck` (older than 3 h)
+is reported as a warning, never removed automatically.
+
+Without `AUTO_PUBLISH=true` nothing is pushed or PR'd: report only.
+`PUBLISH_MODE` defaults to `pr`; `push` must be set explicitly. Bot PRs carry the repo's
+labels `type::tool-outdated` (updates) or `type::tool-deprecated` (removals)
+plus `status::pending-review`; the report issue is `type::auto-update-report`.
+
 ## Publish modes (`PUBLISH_MODE`)
 
-| | `push` (default) | `pr` |
+| | `push` | `pr` (default) |
 |---|---|---|
 | Where commits go | straight to `master` | branch `auto-update/<date>-<run>`, **one PR per run** |
 | When packages are uploaded | right after the push | when the PR is merged (`auto-update-release.yml`) |
@@ -180,7 +191,7 @@ patched, or an unrelated program with the same name).
 
 ## Report
 
-Artifact `auto-update-report` (and the issue labelled `auto-update-report`):
+Artifact `auto-update-report` (and the issue labelled `type::auto-update-report`):
 
 | Section | Sources |
 |---|---|
@@ -237,8 +248,9 @@ A dry run of the static checks on today's tree already finds real bugs, e.g.
 
 1. Merge with `AUTO_PUBLISH` unset → a week of build-and-report only; fix or
    override what the report shows.
-2. `AUTO_PUBLISH=true`, `PUBLISH_MODE=pr` → one PR a day; merging it releases.
-3. `PUBLISH_MODE=push` → fully automatic.
+2. `AUTO_PUBLISH=true` → one PR a day; merging it releases.
+3. `PUBLISH_MODE=push` → fully automatic (or `publish_mode: push` on a
+   single manual run).
 
 Cancelling a run stops it: build shards that haven't started don't start,
 and nothing is committed or released. The report still runs.

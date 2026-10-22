@@ -37,7 +37,7 @@ on:
         options: [auto, 'true', 'false']
         default: auto
       publish_mode:
-        description: 'push = commit to master + release now; pr = one PR, release on merge (default = vars.PUBLISH_MODE)'
+        description: 'pr = one PR, release on merge; push = commit to master + release now (default = vars.PUBLISH_MODE, pr if unset)'
         type: choice
         options: [default, push, pr]
         default: default
@@ -95,7 +95,7 @@ jobs:
           INPUT: ${{ inputs.publish || 'auto' }}
           AUTO: ${{ vars.AUTO_PUBLISH || 'false' }}
           MODE_IN: ${{ inputs.publish_mode || 'default' }}
-          MODE_VAR: ${{ vars.PUBLISH_MODE || 'push' }}
+          MODE_VAR: ${{ vars.PUBLISH_MODE || 'pr' }}
         run: |
           if [ "$INPUT" = auto ]; then publish=$AUTO; else publish=$INPUT; fi
           if [ "$publish" = true ] && [ "$GITHUB_REF" != refs/heads/master ]; then
@@ -545,12 +545,12 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           GH_REPO: ${{ github.repository }}
         run: |
-          gh label create auto-update-report --color 0e8a16 \
+          gh label create type::auto-update-report --color 0e8a16 \
             --description "Daily auto-update report" 2>/dev/null || true
-          n=$(gh issue list --label auto-update-report --state open --json number -q '.[0].number')
+          n=$(gh issue list --label type::auto-update-report --state open --json number -q '.[0].number')
           if [ -n "$n" ]; then
             gh issue edit "$n" --body-file report/issue.md
           else
-            gh issue create --title "Auto-update report" --label auto-update-report \
+            gh issue create --title "Auto-update report" --label type::auto-update-report \
               --body-file report/issue.md
           fi
